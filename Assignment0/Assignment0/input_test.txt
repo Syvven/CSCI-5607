@@ -1,2 +1,2 @@
-imsize 256 256
+imsize 512 512
 perlin

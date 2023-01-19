@@ -27,17 +27,22 @@ static void perlin_based_ppm(ofstream& outf, int seed)
 		{
 			double x = (double)col / (double)OUTPUT_WIDTH;
 			double y = (double)row / (double)OUTPUT_HEIGHT;
+			double z = (double)(row + col) / (double)(OUTPUT_WIDTH + OUTPUT_HEIGHT);
 
 			double val = pns.gen(10*x, 10*y, 0.8);
 
-			val = 20 * pns.gen(x, y, 0.8);
+			double r_val = 200 * pns.gen(6*x, 2*y, 4*z);
+			double g_val = 2 * pns.gen(4*x, 4*y, 2*z);
+			double b_val = 70 * pns.gen(2*x, 6*y, 6*z);
 
-			val = val - floor(val);
+			r_val = r_val - floor(r_val);
+			g_val = g_val - floor(g_val);
+			b_val = b_val - floor(b_val);
 
 			outf <<
-				floor(255 * val) << " " <<
-				floor(255 * val) << " " <<
-				floor(255 * val) << "\n";
+				floor(255 * r_val) << " " <<
+				floor(255 * g_val) << " " <<
+				floor(255 * b_val) << "\n";
 		}
 	}
 
@@ -216,7 +221,7 @@ int main(int argc, char** argv)
 	if (perlin)
 	{
 		cout << "Commencing Perlin Noise Creation..." << endl;
-		perlin_based_ppm(outf, 10);
+		perlin_based_ppm(outf, 8008);
 	}
 	else
 	{
