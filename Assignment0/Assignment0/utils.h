@@ -4,6 +4,20 @@
 
 using namespace std;
 
+static string create_ppm_header(string type, int width, int height, int colors)
+{
+	ostringstream s;
+	s <<
+		type << "\n" <<
+		width << "\n" <<
+		height << "\n" <<
+		colors << "\n";
+
+	string out(s.str());
+
+	return out;
+}
+
 static string eraseFromString(string str, char delim) {
 	string my_str(str);
 	my_str.erase(remove(my_str.begin(), my_str.end(), delim), my_str.end());

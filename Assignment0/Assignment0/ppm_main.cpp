@@ -170,7 +170,7 @@ int main(int argc, char** argv)
 	ofstream outf{ out_file_name, ios_base::trunc };
 	if (!outf)
 	{
-		cerr << "Error in creating 'out_test.ppm' output file." << endl;
+		cerr << "Error in creating '" << out_file_name << "' output file." << endl;
 		exit(EXIT_FAILURE);
 	}
 
