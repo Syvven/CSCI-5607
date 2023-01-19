@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include "utils.h"
+#include "PerlinNoise.hpp"
 
 using namespace std;
 
@@ -13,18 +14,33 @@ static int OUTPUT_WIDTH = 256;
 static int OUTPUT_HEIGHT = 256;
 static int NUM_COLORS = 255;
 
-static string create_ppm_header(string type, int width, int height, int colors)
-{
-	ostringstream s;
-	s <<
-		type << "\n" <<
-		width << "\n" <<
-		height << "\n" <<
-		colors << "\n";
+static bool perlin = false;
 
-	string out(s.str());
-	
-	return out;
+static void perlin_based_ppm(ofstream& outf, int seed)
+{
+	outf << create_ppm_header("P3", OUTPUT_WIDTH, OUTPUT_HEIGHT, NUM_COLORS);
+
+	PerlinNoise pns(seed);
+	for (int row = 0; row < OUTPUT_HEIGHT; row++)
+	{
+		for (int col = 0; col < OUTPUT_WIDTH; col++)
+		{
+			double x = (double)col / (double)OUTPUT_WIDTH;
+			double y = (double)row / (double)OUTPUT_HEIGHT;
+
+			double val = pns.gen(10*x, 10*y, 0.8);
+
+			val = 20 * pns.gen(x, y, 0.8);
+
+			val = val - floor(val);
+
+			outf <<
+				floor(255 * val) << " " <<
+				floor(255 * val) << " " <<
+				floor(255 * val) << "\n";
+		}
+	}
+
 }
 
 /* 
@@ -56,6 +72,8 @@ int main(int argc, char** argv)
 
 	if (argc != 2)
 	{
+		cerr << "Incorrect number of command line arguments." << endl;
+		cerr << "Syntax: <executable> <input_file_name>.txt" << endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -73,7 +91,7 @@ int main(int argc, char** argv)
 			and make sure the format is proper
 	*/
 	int line_count = 0;
-	int input_file_line_count = 1;
+	int input_file_line_count = 2;
 	string in_line;
 	while (!inf.eof())
 	{
@@ -92,50 +110,71 @@ int main(int argc, char** argv)
 		getline(inf, in_line);
 		vector<string> tokens = split(in_line, " ");
 
-		/* checks that proper number of tokesn in input file */
-		if (tokens.size() != 3 || tokens[0] != "imsize")
+		if (line_count == 0)
 		{
-			cerr << "Error: Invalid input." << endl;
-			cerr << "Syntax: imsize <width> <height>" << endl;
-			exit(EXIT_FAILURE);
-		}
-
-		/* check that width and height are numbers with no chars */
-		for (auto& c : tokens[1])
-		{
-			if (!isdigit(c) && c != '-' && c != '.')
+			/* checks that proper number of tokesn in input file */
+			if (tokens.size() != 3 || tokens[0] != "imsize")
 			{
-				cerr << "Error: Width and height must be integers." << endl;
+				cerr << "Error: Invalid input." << endl;
 				cerr << "Syntax: imsize <width> <height>" << endl;
 				exit(EXIT_FAILURE);
 			}
-		}
 
-		for (auto& c : tokens[2])
-		{
-			if (!isdigit(c) && c != '-' && c != '.')
+			/* check that width and height are numbers with no chars */
+			for (auto& c : tokens[1])
 			{
-				cerr << "Error: Width and height must be integers." << endl;
-				cerr << "Syntax: imsize <width> <height>" << endl;
+				if (!isdigit(c) && c != '-' && c != '.')
+				{
+					cerr << "Error: Width and height must be integers." << endl;
+					cerr << "Syntax: imsize <width> <height>" << endl;
+					exit(EXIT_FAILURE);
+				}
+			}
+
+			for (auto& c : tokens[2])
+			{
+				if (!isdigit(c) && c != '-' && c != '.')
+				{
+					cerr << "Error: Width and height must be integers." << endl;
+					cerr << "Syntax: imsize <width> <height>" << endl;
+					exit(EXIT_FAILURE);
+				}
+			}
+
+			/*
+				Width and height should now be numbers
+				Still error handling just in case
+				Also, I'm allowing floats to be inputs
+				They will just be rounded to the nearest int by stoi()
+			*/
+			try
+			{
+				OUTPUT_WIDTH = stoi(tokens[1]);
+				OUTPUT_HEIGHT = stoi(tokens[2]);
+			}
+			catch (invalid_argument& e)
+			{
+				cerr << "Invalid argument to stoi()." << endl;
 				exit(EXIT_FAILURE);
 			}
 		}
+		else if (line_count == 1)
+		{
+			if (tokens.size() != 1)
+			{
+				cerr << "Error: Invalid input." << endl;
+				cerr << "Syntax: <flags: (none/synth)>" << endl;
+				exit(EXIT_FAILURE);
+			}
 
-		/* 
-			Width and height should now be numbers
-			Still error handling just in case
-			Also, I'm allowing floats to be inputs
-			They will just be rounded to the nearest int by stoi()
-		*/
-		try
-		{
-			OUTPUT_WIDTH = stoi(tokens[1]);
-			OUTPUT_HEIGHT = stoi(tokens[2]);
-		}
-		catch (invalid_argument& e)
-		{
-			cerr << "Invalid argument to stoi()." << endl;
-			exit(EXIT_FAILURE);
+			if (tokens[0] == "none")
+			{
+				perlin = false;
+			}
+			if (tokens[0] == "perlin")
+			{
+				perlin = true;
+			}
 		}
 
 		line_count++;
@@ -174,7 +213,16 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
-	gradient_basic_ppm(outf);
+	if (perlin)
+	{
+		cout << "Commencing Perlin Noise Creation..." << endl;
+		perlin_based_ppm(outf, 10);
+	}
+	else
+	{
+		cout << "Generating Boring Image..." << endl;
+		gradient_basic_ppm(outf);
+	}
 
 	outf.close();
 }
