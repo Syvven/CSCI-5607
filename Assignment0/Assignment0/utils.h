@@ -1,8 +1,17 @@
+#ifndef UTILS_H_
+#define UTILS_H_
+
 #include <iostream>
 #include <vector>
 #include <string>
+#include <sstream>
 
 using namespace std;
+
+static float arbitraryRand(float low, float high)
+{
+	return (low + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (high - low))));
+}
 
 static string create_ppm_header(string type, int width, int height, int colors)
 {
@@ -41,3 +50,5 @@ static vector<string> split(string str, string delim) {
 
 	return tokens;
 }
+
+#endif
