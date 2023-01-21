@@ -1,2 +1,3 @@
 imsize 256 256
-combo
+voronoi
+1000

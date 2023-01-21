@@ -272,6 +272,7 @@ vector<float> SPH::calc_pressure()
 
 			/* this is gonna get really ugly */
 
+			/* one diffusion level */
 			if (i > 0) 
 				ret[ind(i - 1, j)] += ret[ind(i, j)] / 2;
 			if (j > 0) 
@@ -288,6 +289,12 @@ vector<float> SPH::calc_pressure()
 				ret[ind(i + 1, j - 1)] += ret[ind(i, j)] / 2;
 			if (i > 0 && j < width - 1)
 				ret[ind(i - 1, j + 1)] += ret[ind(i, j)] / 2;
+			
+			/* second diffusion level god I don't want to write this */
+			if (i > 1)
+				ret[ind(i - 2, j)] += ret[ind(i, j)] / 4;
+			if (j > 1)
+				ret[ind(i, j - 2)] += ret[ind(i, j)] / 4;
 			
 		}
 	}

@@ -19,6 +19,7 @@ static bool normal = false;
 static bool perlin = false;
 static bool particle = false;
 static bool combo = false;
+static bool voronoi = false;
 
 static void put(ofstream& outf, float r, float g, float b)
 {
@@ -26,6 +27,15 @@ static void put(ofstream& outf, float r, float g, float b)
 		(int)r << " " <<
 		(int)g << " " <<
 		(int)b << "\n";
+}
+
+static void voronoi_ppm(ofstream& outf, int seed)
+{
+	bool use_seed = true;
+	if (seed == -1)
+	{
+		use_seed = false;
+	}
 }
 
 static void sph_perlin_combo(ofstream& outf, int seed, bool circle_grav)
@@ -38,7 +48,7 @@ static void sph_perlin_combo(ofstream& outf, int seed, bool circle_grav)
 	sim.run();
 
 	vector<float> press_vals = sim.calc_pressure();
-	vector<float> dens_vals = sim.calc_density(); /* ignore this for now */
+	vector<float> dens_vals = sim.calc_density(); /* ignore this */
 
 	/* color scheme 1 */
 	float max = -9e-15;
@@ -233,6 +243,7 @@ int main(int argc, char** argv)
 			Ensure the syntax of input file is correct
 			Change this condition if adding more params to input file
 		*/
+
 		if (line_count >= input_file_line_count)
 		{
 			cerr << "Error: Too many lines in input file." << endl;
@@ -244,7 +255,7 @@ int main(int argc, char** argv)
 		getline(inf, in_line);
 		vector<string> tokens = split(in_line, " ");
 
-		if (line_count == 0)
+		if (line_count == 0) /* line 0 will always be the same */
 		{
 			/* checks that proper number of tokesn in input file */
 			if (tokens.size() != 3 || tokens[0] != "imsize")
@@ -257,7 +268,7 @@ int main(int argc, char** argv)
 			/* check that width and height are numbers with no chars */
 			for (auto& c : tokens[1])
 			{
-				if (!isdigit(c) && c != '-' && c != '.')
+				if (!isdigit(c) && c != '.')
 				{
 					cerr << "Error: Width and height must be integers." << endl;
 					cerr << "Syntax: imsize <width> <height>" << endl;
@@ -267,7 +278,7 @@ int main(int argc, char** argv)
 
 			for (auto& c : tokens[2])
 			{
-				if (!isdigit(c) && c != '-' && c != '.')
+				if (!isdigit(c) && c != '.')
 				{
 					cerr << "Error: Width and height must be integers." << endl;
 					cerr << "Syntax: imsize <width> <height>" << endl;
@@ -292,31 +303,44 @@ int main(int argc, char** argv)
 				exit(EXIT_FAILURE);
 			}
 		}
-		else if (line_count == 1)
+		else if (line_count == 1) /* line 1 will always determine type */
 		{
 			if (tokens.size() != 1)
 			{
 				cerr << "Error: Invalid input." << endl;
-				cerr << "Syntax: <flags: (none/synth)>" << endl;
+				cerr << "Syntax: <flags: (none/perlin/particle/combo/voronoi)>" << endl;
 				exit(EXIT_FAILURE);
 			}
 
 			if (tokens[0] == "none")
 			{
 				normal = true;
+				input_file_line_count = 2;
 			}
 			if (tokens[0] == "perlin")
 			{
 				perlin = true;
+				input_file_line_count = 3;
 			}
 			if (tokens[0] == "particle")
 			{
 				particle = true;
+				input_file_line_count = 3;
 			}
 			if (tokens[0] == "combo")
 			{
 				combo = true;
+				input_file_line_count = 3;
 			}
+			if (tokens[0] == "voronoi")
+			{
+				voronoi = true;
+				input_file_line_count = 3;
+			}
+		}
+		else /* each type of synthesis will have own argument count */
+		{
+			
 		}
 
 		line_count++;
@@ -380,6 +404,13 @@ int main(int argc, char** argv)
 	{
 		cout << "Combo detected..." << endl;
 		sph_perlin_combo(outf, 8008, false);
+		cout << "Enjoy your image :)" << endl;
+	}
+
+	if (voronoi)
+	{
+		cout << "Voronoi generation..." << endl;
+		voronoi_ppm(outf, -1);
 		cout << "Enjoy your image :)" << endl;
 	}
 
