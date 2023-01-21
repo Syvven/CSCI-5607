@@ -1,3 +1,2 @@
 imsize 256 256
-voronoi
-1000
+none

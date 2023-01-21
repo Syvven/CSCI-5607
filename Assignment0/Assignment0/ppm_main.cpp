@@ -29,15 +29,25 @@ static void put(ofstream& outf, float r, float g, float b)
 		(int)b << "\n";
 }
 
+/*
+	Uses a voronoi diagram to make the ppm.
+	Not finished yet.
+*/
 static void voronoi_ppm(ofstream& outf, int seed)
 {
-	bool use_seed = true;
-	if (seed == -1)
-	{
-		use_seed = false;
-	}
+	outf << create_ppm_header("P3", OUTPUT_WIDTH, OUTPUT_HEIGHT, NUM_COLORS);
+
 }
 
+/*
+	This combines the SPH and perlin noise generation.
+	The SPH sim is run, and any pixel where the pressure value
+	 is under a certain threshold, the perlin noise is calculated for it
+	 and colored based on that. 
+	I think it results in a pretty cool looking image, especially when
+	 gravity is a circle rather than normal.
+
+*/
 static void sph_perlin_combo(ofstream& outf, int seed, bool circle_grav)
 {
 	outf << create_ppm_header("P3", OUTPUT_WIDTH, OUTPUT_HEIGHT, NUM_COLORS);
@@ -106,6 +116,16 @@ static void sph_perlin_combo(ofstream& outf, int seed, bool circle_grav)
 	}
 }
 
+/*
+	This one was fun and interesting.
+	A SPH fluid simulation is run for a number of timesteps
+	 and the pressure at each time step is recorded.
+	After all timesteps have been gone through,
+	 the pressure is then slightly diffused to surrounding pixels
+	 and the log is taken in order to reduce it slightly to make it look better.
+	The timesteps are combined and it is returned after which the values
+	 are converted into a range between 0 and 255 and the blue channel is used.
+*/
 static void sph_based_ppm(ofstream& outf, bool circle_grav)
 {
 	outf << create_ppm_header("P3", OUTPUT_WIDTH, OUTPUT_HEIGHT, NUM_COLORS);
@@ -157,6 +177,13 @@ static void sph_based_ppm(ofstream& outf, bool circle_grav)
 	}*/
 }
 
+/*
+	Generates a ppm based on perlin noise
+	The r_val, g_val, and b_val number multipliers
+	 determine the "look" of the perlin noise.
+	The lower they are, the more "wood" like and smooth
+	The higher they are, the more chaotic and disjointed
+*/
 static void perlin_based_ppm(ofstream& outf, int seed)
 {
 	outf << create_ppm_header("P3", OUTPUT_WIDTH, OUTPUT_HEIGHT, NUM_COLORS);
@@ -237,6 +264,10 @@ int main(int argc, char** argv)
 	int line_count = 0;
 	int input_file_line_count = 2;
 	string in_line;
+
+	/* specific type values */
+	int seed;
+	bool circle_grav;
 	while (!inf.eof())
 	{
 		/* 
@@ -312,35 +343,122 @@ int main(int argc, char** argv)
 				exit(EXIT_FAILURE);
 			}
 
+			/* self explanatory */
+
 			if (tokens[0] == "none")
 			{
 				normal = true;
 				input_file_line_count = 2;
 			}
-			if (tokens[0] == "perlin")
+			else if (tokens[0] == "perlin")
 			{
 				perlin = true;
 				input_file_line_count = 3;
 			}
-			if (tokens[0] == "particle")
+			else if (tokens[0] == "particle")
 			{
 				particle = true;
 				input_file_line_count = 3;
 			}
-			if (tokens[0] == "combo")
+			else if (tokens[0] == "combo")
 			{
 				combo = true;
 				input_file_line_count = 3;
 			}
-			if (tokens[0] == "voronoi")
+			else if (tokens[0] == "voronoi")
 			{
 				voronoi = true;
 				input_file_line_count = 3;
 			}
+			else
+			{
+				cerr << "Error: Invalid input." << endl;
+				cerr << "Syntax: <flags: (none/perlin/particle/combo/voronoi)>" << endl;
+				exit(EXIT_FAILURE);
+			}
 		}
 		else /* each type of synthesis will have own argument count */
 		{
-			
+			/*
+				Perlin: single seed integer
+				Particle: gravity type (normal / circle)
+				Combo: seed then gravity type
+				Voronoi: seed
+			*/
+
+			/*
+				Honestly I could probably make this cleaner using 
+				 variables for each case but uhhhhh I don't really care that much
+			*/
+
+			if ((perlin || voronoi || particle) && tokens.size() != 1)
+			{
+				cerr << "Error: Invalid input." << endl;
+				cerr << "Syntax: ";
+				cerr << (particle ? "<grav_type: normal/circle>" : "<seed>") << endl;
+				exit(EXIT_FAILURE);
+			}
+
+			if (combo && tokens.size() != 2)
+			{
+				cerr << "Error: Invalid input." << endl;
+				cerr << "Syntax: <seed> <grav_type: normal/circle>" << endl;
+				exit(EXIT_FAILURE);
+			}
+
+			if (perlin || combo || voronoi)
+			{
+				for (auto& c : tokens[0])
+				{
+					if (!isdigit(c))
+					{
+						cerr << "Error: Seed must be integer" << endl;
+						exit(EXIT_FAILURE);
+					}
+				}
+
+				seed = stoi(tokens[0]);
+				if (seed < 0)
+				{
+					cerr << "Error: Seed must be a positive integer" << endl;
+					exit(EXIT_FAILURE);
+				}
+			}
+			else
+			{
+				if (tokens[0] == "normal")
+				{
+					circle_grav = false;
+				}
+				else if (tokens[0] == "circle")
+				{
+					circle_grav = true;
+				}
+				else
+				{
+					cerr << "Error: Invalid Input" << endl;
+					cerr << "Syntax: <grav_type: normal/circle>" << endl;
+					exit(EXIT_FAILURE);
+				}
+			}
+
+			if (combo)
+			{
+				if (tokens[1] == "normal")
+				{
+					circle_grav = false;
+				}
+				else if (tokens[1] == "circle")
+				{
+					circle_grav = true;
+				}
+				else
+				{
+					cerr << "Error: Invalid Input" << endl;
+					cerr << "Syntax: <grav_type: normal/circle>" << endl;
+					exit(EXIT_FAILURE);
+				}
+			}
 		}
 
 		line_count++;
@@ -389,28 +507,28 @@ int main(int argc, char** argv)
 	if (perlin)
 	{
 		cout << "Commencing Perlin Noise Creation..." << endl;
-		perlin_based_ppm(outf, 8008);
+		perlin_based_ppm(outf, seed);
 		cout << "Enjoy your image :)" << endl;
 	}
 
 	if (particle)
 	{
 		cout << "Particle system initializing..." << endl;
-		sph_based_ppm(outf, false);
+		sph_based_ppm(outf, circle_grav);
 		cout << "Enjoy your image :)" << endl;
 	}
 
 	if (combo)
 	{
 		cout << "Combo detected..." << endl;
-		sph_perlin_combo(outf, 8008, false);
+		sph_perlin_combo(outf, seed, circle_grav);
 		cout << "Enjoy your image :)" << endl;
 	}
 
 	if (voronoi)
 	{
 		cout << "Voronoi generation..." << endl;
-		voronoi_ppm(outf, -1);
+		voronoi_ppm(outf, seed);
 		cout << "Enjoy your image :)" << endl;
 	}
 
