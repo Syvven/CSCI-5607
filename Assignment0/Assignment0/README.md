@@ -6,18 +6,15 @@ Unfortunately, .ppm files cannot be embedded, so these are actually .png's
 
 ### SPH Fluid Sim
 
-![image1](cool_pictures/image1.ppm)
-![image2](cool_pictures/image2.ppm)
-![image3](cool_pictures/image3.ppm)
-![image4](cool_pictures/image4.ppm)
-![image5](cool_pictures/image5.ppm)
-![image6](cool_pictures/image6.ppm)
-![image7](cool_pictures/image7.ppm)
-![image8](cool_pictures/image8.ppm)
-![image9](cool_pictures/image9.ppm)
-![image10](cool_pictures/image10.ppm)
-![image11](cool_pictures/image11.ppm)
-![image12](cool_pictures/image12.ppm)
+![image1](cool_pictures/image1.png)
+![image2](cool_pictures/image2.png)
+![image3](cool_pictures/image3.png)
+![image4](cool_pictures/image4.png)
+![image5](cool_pictures/image5.png)
+![image6](cool_pictures/image6.png)
+![image7](cool_pictures/image7.png)
+![image9](cool_pictures/image9.png)
+![image12](cool_pictures/image12.png)
 
 ## PPM Overview
 
