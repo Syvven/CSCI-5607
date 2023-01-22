@@ -105,6 +105,10 @@ static void sph_perlin_combo(ofstream& outf, int seed, bool circle_grav)
 		f = (((f - min) * newRange) / oldRange);		
 
 		/* 30 before */
+		/*
+			This threshold can be modified in order to 
+			 make more or less of the image be perlin noise
+		*/
 		if (f < 30)
 		{
 			int row = count / OUTPUT_WIDTH;
@@ -172,6 +176,10 @@ static void sph_based_ppm(ofstream& outf, bool circle_grav)
 	float oldRange = max - min;
 	float newRange = 255 - 0;
 
+	/*
+		The color scheme here can be changed a bit by modifying these values.
+	*/
+
 	for (auto& f : press_vals)
 	{
 		f = (((f - min) * newRange) / oldRange);
@@ -219,6 +227,10 @@ static void perlin_based_ppm(ofstream& outf, int seed)
 
 			double val = pns.gen(10*x, 10*y, 0.8);
 
+			/*
+				Chaning the modifiers of the x, y, z 
+				 values or the gen'd value will change the look of the image
+			*/
 			double r_val = 20 * pns.gen(x, y, z);
 			double g_val = 15 * pns.gen(x, y, z);
 			double b_val = 10 * pns.gen(x, y, z);
@@ -227,6 +239,9 @@ static void perlin_based_ppm(ofstream& outf, int seed)
 			g_val = g_val - floor(g_val);
 			b_val = b_val - floor(b_val);
 
+			/*
+				Changing this will change the color of the perlin image
+			*/
 			put(outf, floor(255 * r_val), floor(255 * g_val), floor(255 * b_val));
 			/*put(outf, floor(255 * r_val), floor(255 * g_val), floor(255 * b_val));*/
 		}
