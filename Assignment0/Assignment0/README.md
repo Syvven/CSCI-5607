@@ -1,5 +1,7 @@
 # PPM Image Generator - Noah Hendrickson
 
+## Example Output
+
 ## PPM Overview
 
 PPM Generator producing PPM files based on various techniques. <br>
@@ -46,6 +48,9 @@ An example is thus:
 C:\Projects> <binary> input_test.txt
 ```
 As for the structure of the input file itself, there are a couple things to note:
+- The input file extension MUST BE .txt
+- The name of the input file will be the name of the output file
+- The output file will have the .ppm extension instead of .txt
 - The first line of the file must be structured as thus:
   - ```imsize <width> <height>```
   - imsize is a keyword and must be written exactly like that
@@ -102,4 +107,93 @@ As for the structure of the input file itself, there are a couple things to note
       - these arguments must be spelled exactly like this and only one can be used at a time
     - ```r g b```
       - THESE ARE THREE SEPERATE ARGUMENTS COMBINED FOR BREVITY SAKE
-      - 
+      - additionally, they SHOULD NOT BE PRESENT if using the random color argument
+      - they determine the r, g, and b values of the set color
+      - each should be an integer between 0 and 255 inclusive
+    - after all the arguments are put in, there should be a single line with:
+      - 4 arguments if using random colors
+      - 7 arguments if using set colors
+    - there should be NO extra lines after this line
+- Below are correct and incorrect examples of all these
+
+## Correct Examples (line numbers should not be included)
+### gradient example:
+```
+1. imsize 256 256
+2. none
+```
+### perlin example:
+```
+1. imsize 256 256
+2. perlin
+3. 201
+```
+### particle example:
+```
+1. imsize 512 512
+2. particle
+3. circle
+```
+### combo example:
+```
+1. imsize 100 100
+2. combo
+3. 0 normal
+```
+### voronoi example (set):
+```
+1. imsize 1024 1024
+2. voronoi
+3. 20 50 gradient set 226 57 20
+```
+### voronoi example (random):
+```
+1. imsize 2048 2048
+2. voronoi
+3. 0 2 flat random
+```
+
+### Incorrect Examples (line numbers should not be included)
+### gradient example:
+- extra line beyond the none keyword
+```
+1. imsize 256 256
+2. none
+3. 0
+```
+### perlin example:
+- negative seed value
+```
+1. imsize 256 256
+2. perlin
+3. -20
+```
+### particle example:
+- square instead of circle or normal
+```
+1. imsize 512 512
+2. particle
+3. square
+```
+### combo example:
+- imsize spelled incorrectly
+- capital N in normal
+```
+1. immmmsize 100 100
+2. combo
+3. 1000 Normal
+```
+### voronoi example (set):
+- only 1 node and no r g b values with set keyword
+```
+1. imsize 1024 1024
+2. voronoi
+3. 20 1 gradient set
+```
+### voronoi example (random):
+- r g b values with normal keyword and b value is 256 
+```
+1. imsize 2048 2048
+2. voronoi
+3. 0 2 flat random 0 100 256
+```
