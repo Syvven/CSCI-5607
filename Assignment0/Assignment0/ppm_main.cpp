@@ -36,7 +36,6 @@ static void put(ofstream& outf, float r, float g, float b)
 
 /*
 	Uses a voronoi diagram to make the ppm.
-	Not finished yet.
 */
 static void voronoi_ppm(ofstream& outf, int seed, int node_count,
 	float v_r, float v_g, float v_b, bool type, bool rand_c)
@@ -317,6 +316,7 @@ int main(int argc, char** argv)
 		{
 			cerr << "Error: Too many lines in input file." << endl;
 			cerr << "Syntax: imsize <width> <height>" << endl;
+			inf.close();
 			exit(EXIT_FAILURE);
 		}
 
@@ -331,6 +331,7 @@ int main(int argc, char** argv)
 			{
 				cerr << "Error: Invalid input." << endl;
 				cerr << "Syntax: imsize <width> <height>" << endl;
+				inf.close();
 				exit(EXIT_FAILURE);
 			}
 
@@ -341,6 +342,7 @@ int main(int argc, char** argv)
 				{
 					cerr << "Error: Width and height must be integers." << endl;
 					cerr << "Syntax: imsize <width> <height>" << endl;
+					inf.close();
 					exit(EXIT_FAILURE);
 				}
 			}
@@ -351,6 +353,7 @@ int main(int argc, char** argv)
 				{
 					cerr << "Error: Width and height must be integers." << endl;
 					cerr << "Syntax: imsize <width> <height>" << endl;
+					inf.close();
 					exit(EXIT_FAILURE);
 				}
 			}
@@ -369,6 +372,7 @@ int main(int argc, char** argv)
 			catch (invalid_argument& e)
 			{
 				cerr << "Invalid argument to stoi()." << endl;
+				inf.close();
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -378,6 +382,7 @@ int main(int argc, char** argv)
 			{
 				cerr << "Error: Invalid input." << endl;
 				cerr << "Syntax: <flags: (none/perlin/particle/combo/voronoi)>" << endl;
+				inf.close();
 				exit(EXIT_FAILURE);
 			}
 
@@ -412,6 +417,7 @@ int main(int argc, char** argv)
 			{
 				cerr << "Error: Invalid input." << endl;
 				cerr << "Syntax: <flags: (none/perlin/particle/combo/voronoi)>" << endl;
+				inf.close();
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -437,6 +443,7 @@ int main(int argc, char** argv)
 				cerr << "Error: Invalid input." << endl;
 				cerr << "Syntax: ";
 				cerr << (particle ? "<grav_type: normal/circle>" : "<seed>") << endl;
+				inf.close();
 				exit(EXIT_FAILURE);
 			}
 
@@ -444,6 +451,7 @@ int main(int argc, char** argv)
 			{
 				cerr << "Error: Invalid input." << endl;
 				cerr << "Syntax: <seed> <grav_type: normal/circle>" << endl;
+				inf.close();
 				exit(EXIT_FAILURE);
 			}
 
@@ -454,6 +462,7 @@ int main(int argc, char** argv)
 					<< "<seed> <node_count> <flat / gradient> "
 					<< "<random / set> <r> <g> <b>" << endl
 					<< "If random, <r>, <g>, <b> do not need to be included." << endl;
+				inf.close();
 				exit(EXIT_FAILURE);
 			}
 
@@ -464,6 +473,7 @@ int main(int argc, char** argv)
 					if (!isdigit(c))
 					{
 						cerr << "Error: Seed must be a positive integer or zero." << endl;
+						inf.close();
 						exit(EXIT_FAILURE);
 					}
 				}
@@ -472,6 +482,7 @@ int main(int argc, char** argv)
 				if (seed < 0)
 				{
 					cerr << "Error: Seed must be positive or zero." << endl;
+					inf.close();
 					exit(EXIT_FAILURE);
 				}
 			}
@@ -489,6 +500,7 @@ int main(int argc, char** argv)
 				{
 					cerr << "Error: Invalid Input" << endl;
 					cerr << "Syntax: <grav_type: normal/circle>" << endl;
+					inf.close();
 					exit(EXIT_FAILURE);
 				}
 			}
@@ -507,6 +519,7 @@ int main(int argc, char** argv)
 				{
 					cerr << "Error: Invalid Input" << endl;
 					cerr << "Syntax: <grav_type: normal/circle>" << endl;
+					inf.close();
 					exit(EXIT_FAILURE);
 				}
 			}
@@ -519,6 +532,7 @@ int main(int argc, char** argv)
 					if (!isdigit(c))
 					{
 						cerr << "Error: Node count must be a positive integer." << endl;
+						inf.close();
 						exit(EXIT_FAILURE);
 					}
 				}
@@ -527,6 +541,7 @@ int main(int argc, char** argv)
 				if (node_count <= 1)
 				{
 					cerr << "Error: Node count must be greater than 1" << endl;
+					inf.close();
 					exit(EXIT_FAILURE);
 				}
 
@@ -546,6 +561,7 @@ int main(int argc, char** argv)
 						<< "<seed> <node_count> <flat / gradient> "
 						<< "<random / set> <r> <g> <b>" << endl
 						<< "If random, <r>, <g>, <b> do not need to be included." << endl;
+					inf.close();
 					exit(EXIT_FAILURE);
 				}
 
@@ -565,6 +581,7 @@ int main(int argc, char** argv)
 						<< "<seed> <node_count> <flat / gradient> "
 						<< "<random / set> <r> <g> <b>" << endl
 						<< "If random, <r>, <g>, <b> do not need to be included." << endl;
+					inf.close();
 					exit(EXIT_FAILURE);
 				}
 
@@ -579,6 +596,7 @@ int main(int argc, char** argv)
 							<< "<seed> <node_count> <flat / gradient> "
 							<< "<random / set> <r> <g> <b>" << endl
 							<< "If random, <r>, <g>, <b> do not need to be included." << endl;
+						inf.close();
 						exit(EXIT_FAILURE);
 					}
 					
@@ -590,6 +608,7 @@ int main(int argc, char** argv)
 							{
 								cerr << "Error: r g b must be positive integers "
 									<< "between 0 and 255 inclusive." << endl;
+								inf.close();
 								exit(EXIT_FAILURE);
 							}
 						}
@@ -600,6 +619,7 @@ int main(int argc, char** argv)
 					{
 						cerr << "Error: r g b must be positive integers "
 							<< "between 0 and 255 inclusive." << endl;
+						inf.close();
 						exit(EXIT_FAILURE);
 					}
 				}
@@ -612,6 +632,7 @@ int main(int argc, char** argv)
 							<< "<seed> <node_count> <flat / gradient> "
 							<< "<random / set> <r> <g> <b>" << endl
 							<< "If random, <r>, <g>, <b> do not need to be included." << endl;
+						inf.close();
 						exit(EXIT_FAILURE);
 					}
 				}
@@ -626,6 +647,7 @@ int main(int argc, char** argv)
 	{
 		cerr << "Error: Too few lines in input file." << endl;
 		cerr << "Syntax: imsize <width> <height>" << endl;
+		inf.close();
 		exit(EXIT_FAILURE);
 	}
 
