@@ -185,7 +185,7 @@ As for the structure of the input file itself, there are a couple things to note
 3. 0 2 flat random
 ```
 
-### Incorrect Examples (line numbers should not be included)
+## Incorrect Examples (line numbers should not be included)
 ### gradient example:
 - extra line beyond the none keyword
 ```
