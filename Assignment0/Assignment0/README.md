@@ -5,7 +5,6 @@
 Unfortunately, .ppm files cannot be embedded, so these are actually .png's
 
 ### SPH Fluid Sim
-
 ![image1](cool_pictures/image1.png)
 ![image2](cool_pictures/image2.png)
 ![image3](cool_pictures/image3.png)
