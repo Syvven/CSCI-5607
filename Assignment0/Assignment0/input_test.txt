@@ -1,3 +1,3 @@
 imsize 256 256
-voronoi
-20 30 gradient random
+perlin
+0

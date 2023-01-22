@@ -219,15 +219,16 @@ static void perlin_based_ppm(ofstream& outf, int seed)
 
 			double val = pns.gen(10*x, 10*y, 0.8);
 
-			double r_val = 200 * pns.gen(6*x, 2*y, 4*z);
-			double g_val = 2 * pns.gen(4*x, 4*y, 2*z);
-			double b_val = 70 * pns.gen(2*x, 6*y, 6*z);
+			double r_val = 20 * pns.gen(x, y, z);
+			double g_val = 15 * pns.gen(x, y, z);
+			double b_val = 10 * pns.gen(x, y, z);
 
 			r_val = r_val - floor(r_val);
 			g_val = g_val - floor(g_val);
 			b_val = b_val - floor(b_val);
 
 			put(outf, floor(255 * r_val), floor(255 * g_val), floor(255 * b_val));
+			/*put(outf, floor(255 * r_val), floor(255 * g_val), floor(255 * b_val));*/
 		}
 	}
 

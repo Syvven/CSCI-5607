@@ -25,6 +25,7 @@ PerlinNoise::PerlinNoise(int seed)
 
 /*
 	Implementation of Ken Perlin's improved noise reference
+	https://mrl.cs.nyu.edu/~perlin/paper445.pdf
 	https://mrl.cs.nyu.edu/~perlin/noise/
 */
 double PerlinNoise::gen(double x, double y, double z)
