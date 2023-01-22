@@ -2,6 +2,8 @@
 
 ## Example Output
 
+[image1]()
+
 ## PPM Overview
 
 PPM Generator producing PPM files based on various techniques. <br>
