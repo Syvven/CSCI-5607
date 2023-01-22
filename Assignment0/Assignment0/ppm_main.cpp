@@ -4,10 +4,12 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <tuple>
 
 #include "utils.h"
 #include "PerlinNoise.hpp"
 #include "SPH.hpp"
+#include "Voronoi.hpp"
 
 using namespace std;
 
@@ -21,6 +23,9 @@ static bool particle = false;
 static bool combo = false;
 static bool voronoi = false;
 
+/*
+	Helper function to put the rgb values to a ppm file
+*/
 static void put(ofstream& outf, float r, float g, float b)
 {
 	outf <<
@@ -33,10 +38,31 @@ static void put(ofstream& outf, float r, float g, float b)
 	Uses a voronoi diagram to make the ppm.
 	Not finished yet.
 */
-static void voronoi_ppm(ofstream& outf, int seed)
+static void voronoi_ppm(ofstream& outf, int seed, int node_count,
+	float v_r, float v_g, float v_b, bool type, bool rand_c)
 {
 	outf << create_ppm_header("P3", OUTPUT_WIDTH, OUTPUT_HEIGHT, NUM_COLORS);
 
+	Voronoi v(
+		seed, 
+		node_count, 
+		OUTPUT_WIDTH, 
+		OUTPUT_HEIGHT,
+		v_r, v_g, v_b,
+		type,
+		rand_c
+	);
+	vector<tuple<float, float, float>> pixels = v.gen();
+
+	for (auto& p : pixels)
+	{
+		put(
+			outf, 
+			get<0>(p),
+			get<1>(p),
+			get<2>(p)
+		);
+	}
 }
 
 /*
@@ -69,9 +95,6 @@ static void sph_perlin_combo(ofstream& outf, int seed, bool circle_grav)
 		if (f > max) max = f;
 		if (f < min) min = f;
 	}
-
-	cout << min << endl;
-	cout << max << endl;
 
 	float oldRange = max - min;
 	float newRange = 255 - 0;
@@ -145,9 +168,6 @@ static void sph_based_ppm(ofstream& outf, bool circle_grav)
 		if (f > max) max = f;
 		if (f < min) min = f;
 	}
-
-	cout << min << endl;
-	cout << max << endl;
 
 	float oldRange = max - min;
 	float newRange = 255 - 0;
@@ -266,7 +286,9 @@ int main(int argc, char** argv)
 	string in_line;
 
 	/* specific type values */
-	int seed;
+	int seed, node_count;
+	bool shade_type, color_type;
+	float v_r, v_g, v_b;
 	bool circle_grav;
 	while (!inf.eof())
 	{
@@ -384,14 +406,17 @@ int main(int argc, char** argv)
 				Particle: gravity type (normal / circle)
 				Combo: seed then gravity type
 				Voronoi: seed
+
+				For all, seed being 0 means no seed is used
 			*/
 
 			/*
 				Honestly I could probably make this cleaner using 
 				 variables for each case but uhhhhh I don't really care that much
+				Also comments here will be a bit sparse as its pretty straight forward
 			*/
 
-			if ((perlin || voronoi || particle) && tokens.size() != 1)
+			if ((perlin || particle) && tokens.size() != 1)
 			{
 				cerr << "Error: Invalid input." << endl;
 				cerr << "Syntax: ";
@@ -406,13 +431,23 @@ int main(int argc, char** argv)
 				exit(EXIT_FAILURE);
 			}
 
+			if (voronoi && tokens.size() != 4 && tokens.size() != 7)
+			{
+				cerr << "Error: Incorrect number of tokens." << endl
+					<< "Syntax: "
+					<< "<seed> <node_count> <flat / gradient> "
+					<< "<random / set> <r> <g> <b>" << endl
+					<< "If random, <r>, <g>, <b> do not need to be included." << endl;
+				exit(EXIT_FAILURE);
+			}
+
 			if (perlin || combo || voronoi)
 			{
 				for (auto& c : tokens[0])
 				{
 					if (!isdigit(c))
 					{
-						cerr << "Error: Seed must be integer" << endl;
+						cerr << "Error: Seed must be a positive integer or zero." << endl;
 						exit(EXIT_FAILURE);
 					}
 				}
@@ -420,7 +455,7 @@ int main(int argc, char** argv)
 				seed = stoi(tokens[0]);
 				if (seed < 0)
 				{
-					cerr << "Error: Seed must be a positive integer" << endl;
+					cerr << "Error: Seed must be positive or zero." << endl;
 					exit(EXIT_FAILURE);
 				}
 			}
@@ -459,6 +494,100 @@ int main(int argc, char** argv)
 					exit(EXIT_FAILURE);
 				}
 			}
+
+			if (voronoi)
+			{
+				/* extract node count */
+				for (auto& c : tokens[1])
+				{
+					if (!isdigit(c))
+					{
+						cerr << "Error: Node count must be a positive integer." << endl;
+						exit(EXIT_FAILURE);
+					}
+				}
+
+				node_count = stoi(tokens[1]);
+				if (node_count <= 1)
+				{
+					cerr << "Error: Node count must be greater than 1" << endl;
+					exit(EXIT_FAILURE);
+				}
+
+				/* extract shading type */
+				if (tokens[2] == "flat")
+				{
+					shade_type = false;
+				}
+				else if (tokens[2] == "gradient")
+				{
+					shade_type = true;
+				}
+				else
+				{
+					cerr << "Error: shade must be flat or gradient." << endl
+						<< "Syntax: "
+						<< "<seed> <node_count> <flat / gradient> "
+						<< "<random / set> <r> <g> <b>" << endl
+						<< "If random, <r>, <g>, <b> do not need to be included." << endl;
+					exit(EXIT_FAILURE);
+				}
+
+				/* extract color type */
+				if (tokens[3] == "random")
+				{
+					color_type = true;
+				}
+				else if (tokens[3] == "set")
+				{
+					color_type = false;
+				}
+				else
+				{
+					cerr << "Error: color must be random or set." << endl
+						<< "Syntax: "
+						<< "<seed> <node_count> <flat / gradient> "
+						<< "<random / set> <r> <g> <b>" << endl
+						<< "If random, <r>, <g>, <b> do not need to be included." << endl;
+					exit(EXIT_FAILURE);
+				}
+
+				v_r = 0; v_b = 0; v_g = 0;
+				/* if set colors, extract r, g, b */
+				if (!color_type)
+				{
+					if (tokens.size() != 7)
+					{
+						cerr << "Error: r g b must be included with set colors" << endl
+							<< "Syntax: "
+							<< "<seed> <node_count> <flat / gradient> "
+							<< "<random / set> <r> <g> <b>" << endl
+							<< "If random, <r>, <g>, <b> do not need to be included." << endl;
+						exit(EXIT_FAILURE);
+					}
+					
+					for (int i = 4; i < 7; i++)
+					{
+						for (auto& c : tokens[i])
+						{
+							if (!isdigit(c))
+							{
+								cerr << "Error: r g b must be positive integers "
+									<< "between 0 and 255 inclusive." << endl;
+								exit(EXIT_FAILURE);
+							}
+						}
+					}
+
+					v_r = stof(tokens[4]); v_g = stof(tokens[5]); v_b = stof(tokens[6]);
+					if (v_r > 255 || v_g > 255 || v_b > 255)
+					{
+						cerr << "Error: r g b must be positive integers "
+							<< "between 0 and 255 inclusive." << endl;
+						exit(EXIT_FAILURE);
+					}
+				}
+			}
 		}
 
 		line_count++;
@@ -471,9 +600,6 @@ int main(int argc, char** argv)
 		cerr << "Syntax: imsize <width> <height>" << endl;
 		exit(EXIT_FAILURE);
 	}
-
-	cout << "Width: " << OUTPUT_WIDTH << endl;
-	cout << "Height: " << OUTPUT_HEIGHT << endl << endl;
 
 	/* in file is done being used so close */
 	inf.close();
@@ -496,6 +622,8 @@ int main(int argc, char** argv)
 		cerr << "Error in creating '" << out_file_name << "' output file." << endl;
 		exit(EXIT_FAILURE);
 	}
+
+	/* I feel like the rest of this is pretty self evident */
 
 	if (normal)
 	{
@@ -528,7 +656,16 @@ int main(int argc, char** argv)
 	if (voronoi)
 	{
 		cout << "Voronoi generation..." << endl;
-		voronoi_ppm(outf, seed);
+		voronoi_ppm(
+			outf,
+			seed, 
+			node_count, 
+			v_r,
+			v_g,
+			v_b,
+			shade_type,
+			color_type
+		);
 		cout << "Enjoy your image :)" << endl;
 	}
 

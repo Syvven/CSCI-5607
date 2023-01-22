@@ -1,2 +1,3 @@
 imsize 256 256
-none
+voronoi
+20 50 gradient set 226 57 20

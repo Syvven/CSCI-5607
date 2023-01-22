@@ -11,7 +11,7 @@ using namespace std;
 class PerlinNoise
 {
 public:
-	PerlinNoise(unsigned int seed);
+	PerlinNoise(int seed);
 	double gen(double x, double y, double z);
 
 private:

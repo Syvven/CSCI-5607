@@ -4,13 +4,20 @@
 	permutation vector will be random 
 	shuffle algorithm: https://github.com/sol-prog/Perlin_Noise/blob/master/PerlinNoise.cpp
 */
-PerlinNoise::PerlinNoise(unsigned int seed)
+PerlinNoise::PerlinNoise(int seed)
 {
 	perm_vec.resize(256);
 
 	iota(perm_vec.begin(), perm_vec.end(), 0);
 
+	if (seed == 0)
+	{
+		random_device r;
+		seed = r();
+	}
+	
 	default_random_engine e(seed);
+
 	shuffle(perm_vec.begin(), perm_vec.end(), e);
 
 	perm_vec.insert(perm_vec.end(), perm_vec.begin(), perm_vec.end());

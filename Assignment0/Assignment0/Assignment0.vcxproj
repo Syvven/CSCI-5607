@@ -142,12 +142,14 @@
     <ClCompile Include="PerlinNoise.cpp" />
     <ClCompile Include="ppm_main.cpp" />
     <ClCompile Include="SPH.cpp" />
+    <ClCompile Include="Voronoi.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PerlinNoise.hpp" />
     <ClInclude Include="SPH.hpp" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="vec2.hpp" />
+    <ClInclude Include="Voronoi.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

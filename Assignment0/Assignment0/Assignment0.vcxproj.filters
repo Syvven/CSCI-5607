@@ -24,6 +24,9 @@
     <ClCompile Include="SPH.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Voronoi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils.h">
@@ -36,6 +39,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vec2.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Voronoi.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
