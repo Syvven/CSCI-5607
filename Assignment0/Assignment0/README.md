@@ -2,7 +2,7 @@
 
 ## Example Output
 
-[image1]()
+[image1](cool_pictures/input_test1.ppm)
 
 ## PPM Overview
 
