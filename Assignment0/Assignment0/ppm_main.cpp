@@ -603,6 +603,18 @@ int main(int argc, char** argv)
 						exit(EXIT_FAILURE);
 					}
 				}
+				else
+				{
+					if (tokens.size() != 4)
+					{
+						cerr << "Error: r g b must not be included with set colors" << endl
+							<< "Syntax: "
+							<< "<seed> <node_count> <flat / gradient> "
+							<< "<random / set> <r> <g> <b>" << endl
+							<< "If random, <r>, <g>, <b> do not need to be included." << endl;
+						exit(EXIT_FAILURE);
+					}
+				}
 			}
 		}
 
