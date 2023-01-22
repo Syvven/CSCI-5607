@@ -7,6 +7,11 @@ Unfortunately, .ppm files cannot be embedded, so these are actually .png's
 ### Gradient (none)
 ![image13](cool_pictures/image13.png)
 
+### Perlin Noise
+![image16](cool_pictures/image16.png)
+![image17](cool_pictures/image17.png)
+![image18](cool_pictures/image18.png)
+
 ### SPH Fluid Sim
 ![image1](cool_pictures/image1.png)
 ![image2](cool_pictures/image2.png)
