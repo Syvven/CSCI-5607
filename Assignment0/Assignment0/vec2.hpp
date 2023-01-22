@@ -4,6 +4,12 @@
 #include <iostream>
 #include <cmath>
 
+/*
+	Vector class useful for the SPH simulation.
+	Contains various functions on vectors
+	 including distance and normalization.
+*/
+
 class vec2
 {
 public:

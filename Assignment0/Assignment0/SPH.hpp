@@ -11,6 +11,10 @@
 
 using namespace std;
 
+/*
+	Credit to Stephen Guy for the knowledge of how to do SPH
+*/
+
 class SPH
 {
 public:

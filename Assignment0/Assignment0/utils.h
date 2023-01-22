@@ -7,6 +7,12 @@
 #include <sstream>
 #include <random>
 
+/*
+	A utils file I made for another project some other time
+	 and figured it would be useful here.
+	Used mostly for string manipulation
+*/
+
 using namespace std;
 
 static float arbitraryRand(float low, float high)

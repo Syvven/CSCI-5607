@@ -295,6 +295,11 @@ vector<float> SPH::calc_pressure()
 				ret[ind(i - 2, j)] += ret[ind(i, j)] / 4;
 			if (j > 1)
 				ret[ind(i, j - 2)] += ret[ind(i, j)] / 4;
+
+			/*
+				I didn't finish this but I was gonna do the second ring
+				 fully and spread 1/4 of the original pressure to those pixels
+			*/
 			
 		}
 	}
