@@ -2,7 +2,9 @@
 
 ## Example Output
 
-[image1](cool_pictures/input_test1.ppm)
+Unfortunately, .ppm files cannot be embedded, so these are actually .png's
+
+![image1](cool_pictures/input_test1.ppm)
 
 ## PPM Overview
 
