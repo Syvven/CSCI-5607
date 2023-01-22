@@ -9,13 +9,15 @@ Unfortunately, .ppm files cannot be embedded, so these are actually .png's
 ![image2](cool_pictures/image2.png)
 ![image4](cool_pictures/image4.png)
 ![image5](cool_pictures/image5.png)
-![image9](cool_pictures/image9.png)
-![image12](cool_pictures/image12.png)
 
 ### Combo
 ![image3](cool_pictures/image3.png)
 ![image6](cool_pictures/image6.png)
 ![image7](cool_pictures/image7.png)
+
+### Voronoi
+![image9](cool_pictures/image9.png)
+![image12](cool_pictures/image12.png)
 
 ## PPM Overview
 
