@@ -4,6 +4,9 @@
 
 Unfortunately, .ppm files cannot be embedded, so these are actually .png's
 
+### Gradient (none)
+![image13](cool_pictures/image13.png)
+
 ### SPH Fluid Sim
 ![image1](cool_pictures/image1.png)
 ![image2](cool_pictures/image2.png)
@@ -16,6 +19,8 @@ Unfortunately, .ppm files cannot be embedded, so these are actually .png's
 ![image7](cool_pictures/image7.png)
 
 ### Voronoi
+![image14](cool_pictures/image14.png)
+![image15](cool_pictures/image15.png)
 ![image9](cool_pictures/image9.png)
 ![image12](cool_pictures/image12.png)
 
