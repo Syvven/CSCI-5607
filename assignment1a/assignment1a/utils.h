@@ -7,6 +7,10 @@
 #include <sstream>
 #include <random>
 #include <algorithm>
+#include <cmath>
+#include <boost/algorithm/string/trim.hpp>
+
+#include "vec3.h"
 
 /*
 	A utils file I made for another project some other time
@@ -15,6 +19,50 @@
 */
 
 using namespace std;
+
+/*
+	Helper function to put the rgb values to a ppm file
+*/
+static void put(ofstream& outf, float r, float g, float b)
+{
+	int ir = (int)r;
+	int ig = (int)g;
+	int ib = (int)b;
+	outf <<
+		ir << " " <<
+		ig << " " <<
+		ib << "\n";
+}
+
+static bool is_number(string s, vector<char>& valid_chars)
+{
+	/* iterate through each char in the string */
+	for (auto& c : s)
+	{	
+		/* check that it is a digit */
+		if (!isdigit(c))
+		{
+			bool okay = false;
+			/* if its not, see if char is in acceptable non-digits */
+			for (auto& oc : valid_chars)
+			{
+				if (c == oc) okay = true;
+			}
+			/* if not, return failure */
+			if (!okay)
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+static void err_msg(string msg)
+{
+    cerr << msg;
+    exit(EXIT_FAILURE);
+}
 
 static float arbitraryRand(float low, float high)
 {
@@ -41,6 +89,13 @@ static string eraseFromString(string str, char delim) {
 	return my_str;
 }
 
+static string& trim(string& s, const char* t = " \t\n\r\f\v")
+{
+	s.erase(0, s.find_first_not_of(t));
+	s.erase(s.find_last_not_of(t)+1);
+	return s;
+}
+
 static vector<string> split(string str, string delim) {
 	vector<string> tokens;
 
@@ -56,16 +111,21 @@ static vector<string> split(string str, string delim) {
 
 	tokens.push_back(str);
 
-	for (int i = 0; i < tokens.size(); i++)
-	{
-		for (int j = 0; j < tokens[i].length(); j++)
+	for (vector<string>::iterator iter = tokens.begin(); iter != tokens.end(); iter) {
+		boost::algorithm::trim((*iter));
+		if ((*iter) == "") 
 		{
-			if (tokens[i][j] == '\r' || tokens[i][j] == '\n')
-			{
-				tokens[i].erase(j, 1);
-			}
+			iter = tokens.erase(iter);
 		}
-	}
+		else 
+		{
+			iter++;
+		}
+        if (iter == tokens.end()) 
+		{
+            break;
+        }
+    }
 
 	return tokens;
 }
