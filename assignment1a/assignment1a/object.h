@@ -8,6 +8,12 @@
 #include "material.h"
 #include "ray.h"
 
+/*
+    Base class for object.
+    I think this will be helpful when
+     getting into more complicated models
+*/
+
 class Object 
 {
 public:

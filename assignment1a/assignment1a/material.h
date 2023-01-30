@@ -5,6 +5,10 @@
 
 #include "color.h"
 
+/*
+    Maberial
+*/
+
 struct Material 
 {
     Color color;

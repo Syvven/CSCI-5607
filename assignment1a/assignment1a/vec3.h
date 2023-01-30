@@ -135,6 +135,7 @@ struct vec3
         return vec3(x/mag, y/mag, z/mag);
     }
 
+    /* sets to the specified length i feel thats pretty obvious */
     void setToLength(float newL)
     {
         float magnitude = sqrt(x*x + y*y + z*z);
@@ -160,12 +161,14 @@ struct vec3
         return vec3(x*f, y*f, z*f);
     }
 
+    /* i never used this lol */
     vec3 ortho_project_onto(vec3& ovec)
     {
         return ovec * (this->dot(ovec) / ovec.dot(ovec));
     }
 
     /* in uxv, this is u and ovec is v */
+    /* produces vector orthogonal to plane spanned by u and v */
     vec3 cross(const vec3& ovec)
     {
         return vec3(

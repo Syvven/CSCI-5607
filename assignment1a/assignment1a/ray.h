@@ -7,6 +7,12 @@
 
 using namespace std;
 
+
+/*
+    This is pretty self explanatory.
+    Contains origin and direction. 
+*/
+
 struct Ray 
 {
     vec3 orig, dir;

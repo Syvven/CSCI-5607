@@ -26,6 +26,15 @@ inline string ToString(T value)
     return out.str();
 }
 
+/*
+    Sorry for not commenting this too much.
+    Its really just a bunch of file manip and error handling
+     so idk what there is much to say. 
+    Any argument specifications is in the readme. 
+    Hope you're having a good day!
+    If you're not, hopefully tomorrow will be better!
+*/
+
 Color extract_only_color(string keyword, vector<string>& tokens, ifstream& inf)
 {
     if (tokens.size() != 3)
@@ -172,8 +181,7 @@ int main(int argc, char** argv)
 	ifstream inf{ argv[1] };
 	if (!inf)
 	{
-		cerr << "Input file does not exist." << endl;
-		exit(EXIT_FAILURE);
+		err_msg("Input file does not exist.");
 	}
 
 	/*
@@ -235,6 +243,13 @@ int main(int argc, char** argv)
                 try 
                 {
                     r = stof(tokens[3]);
+                    if (r < zeros.epsilon)
+                    {
+                        string msg = string("");
+                        msg = msg + "sphere radius must be non-zero\n" +
+                            "Tolerance: " + ToString(zeros.epsilon) + "\n";
+                        err_msg(msg);
+                    }
                 }
                 catch (invalid_argument& e)
                 {
@@ -283,6 +298,22 @@ int main(int argc, char** argv)
                 {
                     r = stof(tokens[6]);
                     l = stof(tokens[7]);
+
+                    if (r < zeros.epsilon)
+                    {
+                        string msg = string("");
+                        msg = msg + "cylinder radius must be non-zero\n" +
+                            "Tolerance: " + ToString(zeros.epsilon) + "\n";
+                        err_msg(msg);
+                    }
+
+                    if (l < zeros.epsilon)
+                    {
+                        string msg = string("");
+                        msg = msg + "cylinder length must be non-zero\n" +
+                            "Tolerance: " + ToString(zeros.epsilon) + "\n";
+                        err_msg(msg);
+                    }
                 }
                 catch (invalid_argument& e)
                 {
@@ -318,7 +349,15 @@ int main(int argc, char** argv)
                 material_applied = false;
             }
 
-            if (keyword == "eye")
+            if (!material_applied && keyword == "circle")
+            {
+                err_msg("circle must follow a material specification\n");
+            }
+            else if (!material_applied && keyword == "cylinder")
+            {
+                err_msg("cylinder must follow a material specification\n");
+            }
+            else if (keyword == "eye")
             {
                 eye_pos = extract_only_vector(keyword, tokens, inf);
                 eye_present = true;
@@ -418,6 +457,10 @@ int main(int argc, char** argv)
                 {
                     out_width = stoi(tokens[0]);
                     out_height = stoi(tokens[1]);
+                    if (out_width < 1)
+                        err_msg("width must be greater than 0\n");
+                    if (out_height < 1)
+                        err_msg("height must be greater than 0\n");
                 }
                 catch (invalid_argument& e)
                 {
@@ -499,7 +542,7 @@ int main(int argc, char** argv)
         err_msg("Input file must be a .txt file.");
 	}
     
-	string out_file_name = "./outputs/" + file_tokens[file_tokens.size()-1] + ".ppm";
+	string out_file_name = "./output/" + file_tokens[file_tokens.size()-1] + ".ppm";
 	ofstream outf{ out_file_name, ios_base::trunc };
 	if (!outf)
 	{
