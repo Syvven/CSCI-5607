@@ -1,0 +1,51 @@
+
+mtlcolor 0 0.9 0.4
+cylinder 0 -2.5 10 0 1 0 1 10
+
+updir 0 1 0
+
+    viewdir 0.0000000000000001 0 1
+
+imsize 10 10
+eye 0 0 0
+
+hfov 90
+
+
+
+mtlcolor     1    1      1
+sphere 0 0 10 1
+
+
+
+mtlcolor 0.3 0 0
+cylinder -2.5 0 10 1 0 0 .5 5
+
+mtlcolor 0.4 0 1
+cylinder 0 0 12.5 0 0 -1 .5 5
+
+mtlcolor .8 0 0
+sphere -2.5 -2.5 7.5 1
+
+mtlcolor 0 0 1
+sphere -2.5 -2.5 12.5 1
+
+mtlcolor 0 1 0
+sphere 2.5 -2.5 12.5 1
+
+mtlcolor 1 0 0
+sphere 2.5 -2.5 7.5 1
+
+mtlcolor .2 0 0
+sphere 2.5 2.5 7.5 1
+
+mtlcolor .5 0 0
+sphere -2.5 2.5 7.5 1
+
+mtlcolor 0.75 .25 0.5
+sphere -2.5 2.5 12.5 1
+
+mtlcolor 0.5 0.75 0.25
+sphere 2.5 2.5 12.5 1
+
+bkgcolor 0.1 0.1 0.1
