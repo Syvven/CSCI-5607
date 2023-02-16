@@ -1,0 +1,21 @@
+imsize 1024 1024
+
+eye 25 20 50
+
+viewdir -25 -20 -50
+
+hfov 90
+updir 0 1 0
+bkgcolor 0 0 0
+
+threadcount 25
+
+light -1 0 -1  0  0.6 0.6 0.6
+light 0 75 0  1  0.3 0.3 0.3
+
+mtlcolor 1 0 0  1 1 1 1 1 1 1
+sphere 0 0 0 20
+sphere 25 0 25 6
+sphere 25 0 -25 6
+sphere -25 0 -25 6
+sphere -25 0 25 6

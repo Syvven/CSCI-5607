@@ -1,0 +1,18 @@
+imsize 1024 1024
+
+eye 10 0 0
+
+viewdir -1 0 0
+
+hfov 90
+updir 0 1 0
+bkgcolor 1 1 1
+
+threadcount 8
+
+mtlcolor 1 0 0  .5 .5 .5  0 1 1  2
+cylinder 0 0 0 0 -1 0 3 10
+
+// light 10 10 10  1  1 1 1
+
+light -1 0 0  0  1 1 1
