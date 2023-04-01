@@ -1,0 +1,32 @@
+eye 120 5 0
+viewdir -1 0 0
+updir 0 -1 0
+hfov 45
+imsize 1080 1080
+
+light -1 -1 -1 0 1 1 1
+
+bkgcolor 0.5 0.7 0.9 1
+
+threadcount 100
+
+mtlcolor 1 1 1 1 1 1 0.2 0.4 0.6 60 0.2 0.2 0.2 1.5
+sphere 0 0 -20 20
+
+mtlcolor 1 1 1 1 1 1 0.2 0.4 0.6 60 0.2 1.5
+sphere 0 0 20 20
+
+v -60  60   60 
+v -60 -60   60
+v -60 -60  -60
+v -60  60  -60
+
+vt 0 0
+vt 0 1
+vt 1 0
+vt 1 1
+
+mtlcolor 1 0 0 1 1 1 0.2 0.4 0 0 1 0
+bump textures/jermanormal.ppm 
+f 1/2 2/1 4/4
+f 3/3 4/4 2/1
