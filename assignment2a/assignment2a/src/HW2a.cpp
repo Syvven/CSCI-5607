@@ -10,14 +10,26 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <assert.h>
 
 #define DEBUG_ON 1  // repetitive of the debug flag in the shader loading code, included here for clarity only
-#define ALLOW_FILES 0 
+#define ALLOW_FILES 1 
 
 // This file contains the code that reads the shaders from their files and compiles them
 #include "ShaderStuff.hpp"
 
 //----------------------------------------------------------------------------
+
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+static void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos);
+static void error_callback(int error, const char* decription);
+static void multiply_matrices(GLfloat* left, GLfloat* right);
+static void print_matrix(char* mat_name, GLfloat* mat);
+static void read_vertices_from_file(char* filename);
+static void update_transformation_matrix();
+static void reset();
+
 
 // initialize some basic structure types
 typedef struct Vector2D {
@@ -112,7 +124,9 @@ static GLfloat rot_ang       = 0.0f,
 /* values for extra credit */
 std::vector<Vector2D> vertices_vec;
 std::vector<Color3D> colors_vec;
-bool read_from_file = false;
+std::vector<unsigned int> inds_vec;
+bool read_from_file = false,
+     read_kiwi_file = false;
 GLint num_verts = 0;
 
 static GLfloat Ms[3][16],
@@ -123,7 +137,10 @@ static GLfloat sub_rot_speed_1 = 0.0f,
                sub_rot_speed_3 = 0.0f,
                sub_rot_ang_1   = 0.0f,
                sub_rot_ang_2   = 0.0f,
-               sub_rot_ang_3   = 0.0f;
+               sub_rot_ang_3   = 0.0f,
+               sub_rot_dir_1   = 0.0f,
+               sub_rot_dir_2   = 0.0f,
+               sub_rot_dir_3   = 0.0f;
 
 static bool sub_rot_1 = false,
             sub_rot_2 = false,
@@ -171,6 +188,9 @@ key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
     if (key == GLFW_KEY_3 && p_or_r)
         thr_press = !thr_press;
+
+    if (key == GLFW_KEY_R && action == GLFW_RELEASE)
+        reset();
 }
 
 //----------------------------------------------------------------------------
@@ -194,16 +214,24 @@ mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
                 translate = true;
             }
             else if (!translate && !one_press && !two_press && !thr_press)
-                rot = !rot;
+                rot = true;
+            else
+            {
+                if (one_press) sub_rot_1 = true;
+                if (two_press) sub_rot_2 = true;
+                if (thr_press) sub_rot_3 = true;
+            }
+
         }
 
         else if (action == GLFW_RELEASE)
         {
-            if (translate) translate = false;
+            translate = false;
+            rot = false;
+            sub_rot_1 = false;
+            sub_rot_2 = false;
+            sub_rot_3 = false;
         }
-        
-        
-        
     }
 
     prev_x = mouse_x;
@@ -214,14 +242,13 @@ mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 // function that is called whenever a cursor motion event occurs
 static void
 cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
-    glfwGetCursorPos(window, &mouse_x, &mouse_y);
     // determine the direction of the mouse or cursor motion
     // update the current mouse or cursor location
     //  (necessary to quantify the amount and direction of cursor motion)
     // take the appropriate action
 
-    GLfloat mouse_x_r = mouse_x - window_width * 0.5;
-    GLfloat mouse_y_r = mouse_y - window_height * 0.5;
+    GLfloat mouse_x_r = xpos - window_width * 0.5;
+    GLfloat mouse_y_r = ypos - window_height * 0.5;
 
     if (rot)
     {
@@ -235,42 +262,42 @@ cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
 
     if (sub_rot_1)
     {
-        rot_dir = atan2(
+        sub_rot_dir_1 = atan2(
             mouse_x_r * prev_y - mouse_y_r * prev_x,
             mouse_x_r * prev_x + mouse_y_r * prev_y
         );
 
-        rot_dir = std::copysign(1.0f, rot_dir);
+        sub_rot_dir_1 = std::copysign(1.0f, sub_rot_dir_1);
     }
 
     if (sub_rot_2)
     {
-        rot_dir = atan2(
+        sub_rot_dir_2 = atan2(
             mouse_x_r * prev_y - mouse_y_r * prev_x,
             mouse_x_r * prev_x + mouse_y_r * prev_y
         );
 
-        rot_dir = std::copysign(1.0f, rot_dir);
+        sub_rot_dir_2 = std::copysign(1.0f, sub_rot_dir_2);
     }
 
     if (sub_rot_3)
     {
-        rot_dir = atan2(
+        sub_rot_dir_3 = atan2(
             mouse_x_r * prev_y - mouse_y_r * prev_x,
             mouse_x_r * prev_x + mouse_y_r * prev_y
         );
 
-        rot_dir = std::copysign(1.0f, rot_dir);
+        sub_rot_dir_3 = std::copysign(1.0f, sub_rot_dir_3);
     }
 
     if (translate)
     {
-        move_x = 2 * mouse_x * ww_inv - 1.0f;
-        move_y = 2 * -mouse_y * wh_inv + 1.0f;
+        move_x = 2 * xpos * ww_inv - 1.0f;
+        move_y = 2 * -ypos * wh_inv + 1.0f;
     }
 
-    prev_x = mouse_x;
-    prev_y = mouse_y;
+    prev_x = mouse_x_r;
+    prev_y = mouse_y_r;
 }
 
 //----------------------------------------------------------------------------
@@ -295,6 +322,9 @@ static void update_transformation_matrix()
     S[S_Y_IND] += up_state    * S_POS_MOD + down_state * S_NEG_MOD;
     S[S_X_IND] += right_state * S_POS_MOD + left_state * S_NEG_MOD;
 
+    if (abs(S[S_Y_IND]) < 1e-15) S[S_Y_IND] = 0.0001;
+    if (abs(S[S_X_IND]) < 1e-15) S[S_X_IND] = 0.0001;
+
     /**************** accumulate translation updates ****************/
 
     T[T_X_IND] = move_x;
@@ -303,12 +333,24 @@ static void update_transformation_matrix()
     /**************** accumulte rotation updates ****************/
 
     /* ramp up speed until it goes beyond max speed */
-    rot_speed += (rot_accel * rot * (rot_speed < rot_max_speed));
+    rot_speed       += (rot_accel * rot       * (rot_speed       < rot_max_speed));
+
+    sub_rot_speed_1 += (rot_accel * sub_rot_1 * (sub_rot_speed_1 < rot_max_speed)) + (rot_accel * rot * (rot_speed < rot_max_speed));
+    sub_rot_speed_2 += (rot_accel * sub_rot_2 * (sub_rot_speed_2 < rot_max_speed)) + (rot_accel * rot * (rot_speed < rot_max_speed));
+    sub_rot_speed_3 += (rot_accel * sub_rot_3 * (sub_rot_speed_3 < rot_max_speed)) + (rot_accel * rot * (rot_speed < rot_max_speed));
 
     /* decelerate if no longer holding mouse button */
-    rot_speed -= (rot_decel * !rot * (rot_speed > 0));
+    rot_speed       -= (rot_decel * !rot       * (rot_speed       > 0));
 
-    rot_ang += rot_speed * rot_dir;
+    sub_rot_speed_1 -= (rot_decel * !sub_rot_1 * (sub_rot_speed_1 > 0)) - (rot_decel * !rot * (rot_speed > 0));
+    sub_rot_speed_2 -= (rot_decel * !sub_rot_2 * (sub_rot_speed_2 > 0)) - (rot_decel * !rot * (rot_speed > 0));
+    sub_rot_speed_3 -= (rot_decel * !sub_rot_3 * (sub_rot_speed_3 > 0)) - (rot_decel * !rot * (rot_speed > 0));
+
+    rot_ang       += rot_speed       * rot_dir;
+
+    sub_rot_ang_1 += sub_rot_speed_1 * sub_rot_dir_1 + (rot_speed * rot_dir);
+    sub_rot_ang_2 += sub_rot_speed_2 * sub_rot_dir_2 + (rot_speed * rot_dir);
+    sub_rot_ang_3 += sub_rot_speed_3 * sub_rot_dir_3 + (rot_speed * rot_dir);
 
     if (read_from_file)
     {
@@ -322,23 +364,15 @@ static void update_transformation_matrix()
     }
     else
     {
-        if (sub_rot_1)
-        {
-            Rs[0][0] = cos(rot_ang); Rs[0][1] = -sin(rot_ang);
-            Rs[0][4] = sin(rot_ang); Rs[0][5] = cos(rot_ang);
-        }
-
-        if (sub_rot_2)
-        {
-            Rs[1][0] = cos(rot_ang); Rs[1][1] = -sin(rot_ang);
-            Rs[1][4] = sin(rot_ang); Rs[1][5] = cos(rot_ang);
-        }
-
-        if (sub_rot_3)
-        {
-            Rs[2][0] = cos(rot_ang); Rs[2][1] = -sin(rot_ang);
-            Rs[2][4] = sin(rot_ang); Rs[2][5] = cos(rot_ang);
-        }
+        Rs[0][0] = cos(sub_rot_ang_1); Rs[0][1] = -sin(sub_rot_ang_1);
+        Rs[0][4] = sin(sub_rot_ang_1); Rs[0][5] =  cos(sub_rot_ang_1);
+        
+        Rs[1][0] = cos(sub_rot_ang_2); Rs[1][1] = -sin(sub_rot_ang_2);
+        Rs[1][4] = sin(sub_rot_ang_2); Rs[1][5] =  cos(sub_rot_ang_2);
+        
+        Rs[2][0] = cos(sub_rot_ang_3); Rs[2][1] = -sin(sub_rot_ang_3);
+        Rs[2][4] = sin(sub_rot_ang_3); Rs[2][5] =  cos(sub_rot_ang_3);
+        
 
         /**************** apply transformation matrices ****************/
 
@@ -348,6 +382,29 @@ static void update_transformation_matrix()
             multiply_matrices(Rs[i], Ms[i]);
             multiply_matrices(T, Ms[i]);
         }
+    }
+}
+
+static void reset()
+{
+    sub_rot_dir_1 = sub_rot_speed_1 = sub_rot_ang_1 = 0.0f;
+    sub_rot_dir_2 = sub_rot_speed_2 = sub_rot_ang_2 = 0.0f;
+    sub_rot_dir_3 = sub_rot_speed_3 = sub_rot_ang_3 = 0.0f;
+    rot_dir       = rot_speed       = rot_ang       = 0.0f;
+
+    move_x = move_y = move_z = prev_x = prev_y = 0.0f;
+
+    sub_rot_1 = sub_rot_2 = sub_rot_3 = false;
+    one_press = two_press = thr_press = false;
+
+    up_state = down_state = right_state = left_state = translate = false;
+    
+
+    for (int i = 0; i < 16; i++)
+    {
+        Rs[0][i] = Rs[1][i] = Rs[2][i] = (i % 5 == 0);
+        Ms[0][i] = Ms[1][i] = Ms[2][i] = (i % 5 == 0);
+        M[i] = T[i] = S[i] = (i % 5 == 0);
     }
 }
 
@@ -385,15 +442,15 @@ void init( void )
         vertices_vec.push_back(Vector2D(-0.25, -0.5));  // mid-lower left
     }
 
-    std::vector<unsigned int> inds;
-    for (int i = 0; i < num_verts; i++) inds.push_back(i);
+    if (!read_kiwi_file) for (int i = 0; i < num_verts; i++) inds_vec.push_back(i);
 
     size_t colors_size = num_verts * sizeof(Color3D);
     size_t verts_size = num_verts * sizeof(Vector2D);
-    size_t inds_size = num_verts * sizeof(unsigned int);
+    size_t inds_size = inds_vec.size() * sizeof(unsigned int);
 
     Color3D* colors = colors_vec.data();
     Vector2D* vertices = vertices_vec.data();
+    unsigned int* indices = inds_vec.data();
         
     // Create and bind a vertex array object
     glGenVertexArrays(1, vao);
@@ -406,18 +463,26 @@ void init( void )
     glBufferData(
         GL_ARRAY_BUFFER,
         colors_size + verts_size,
-        &vertices_vec.data()[0],
+        vertices,
         GL_STATIC_DRAW
     );
 
+
+    assert(sizeof(GLfloat) * 2 == sizeof(Vector2D));
+    assert(sizeof(GLfloat) * 3 == sizeof(Color3D));
+    assert(verts_size == (sizeof(GLfloat) * 2 * vertices_vec.size()));
+    assert(colors_size == (sizeof(GLfloat) * 3 * colors_vec.size()));
+
     glBufferSubData(GL_ARRAY_BUFFER, 0, verts_size, vertices);
     glBufferSubData(GL_ARRAY_BUFFER, verts_size, colors_size, colors);
+
+    assert(inds_size == (sizeof(unsigned int) * inds_vec.size()));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(
         GL_ELEMENT_ARRAY_BUFFER, 
         inds_size, 
-        &inds.data()[0],
+        indices,
         GL_STATIC_DRAW
     );
 
@@ -456,6 +521,90 @@ void init( void )
 
 //----------------------------------------------------------------------------
 
+static void read_kiwi_from_file(char* filename)
+{
+    std::cout << "Loading Secret Kiwi :)" << std::endl;
+
+    FILE* fp;
+    if ((fp = fopen(filename, "r")) == nullptr)
+    {
+        fprintf(stderr, "Failed To Open File: %s\n", filename);
+        return;
+    }
+
+    char line[512];
+    Color3D color;
+    while (fgets(line, 512, fp) != nullptr)
+    {
+        if (line[0] == '\n') continue;
+
+        char keyword[100];
+        int ret = sscanf(line, "%s", keyword);
+
+        if (strcmp(keyword, "v") == 0)
+        {
+            Vector2D vertex;  float throwaway;
+            ret = sscanf(line, "v %f %f %f",
+                &vertex.x, &vertex.y, &throwaway
+            );
+
+            if (ret == EOF) break;
+            if (ret != 3)
+            {
+                fprintf(stderr, "Failed to read vertex from %s.\n", filename);
+                exit(EXIT_FAILURE);
+            }
+
+            vertices_vec.push_back(vertex);
+            colors_vec.push_back(color);
+        }
+        if (strcmp(keyword, "c") == 0)
+        {
+            ret = sscanf(line, "c %f %f %f",
+                &color.r, &color.g, &color.b
+            );
+
+            if (ret == EOF) break;
+            if (ret != 3)
+            {
+                fprintf(stderr, "Failed to read color from %s.\n", filename);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (strcmp(keyword, "f") == 0)
+        {
+            unsigned int v0, v1, v2, v3;
+            ret = sscanf(line, "f %d %d %d %d",
+                &v0, &v1, &v2, &v3
+            );
+            if (ret == EOF) break;
+            if (ret != 4)
+            {
+                fprintf(stderr, "Failed to read face from %s.\n", filename);
+                exit(EXIT_FAILURE);
+            }
+
+            /* break quad into two triangles */
+
+            inds_vec.push_back(v0-1);
+            inds_vec.push_back(v1-1);
+            inds_vec.push_back(v2-1);
+
+            inds_vec.push_back(v0-1);
+            inds_vec.push_back(v2-1);
+            inds_vec.push_back(v3-1);
+        }
+    }
+
+    if (vertices_vec.size() != 0)
+    {
+        read_from_file = true;
+        num_verts = vertices_vec.size();
+
+        read_kiwi_file = true;
+    }
+}
+
 static void read_vertices_from_file(char *filename)
 {
     FILE* fp;
@@ -493,11 +642,13 @@ static void read_vertices_from_file(char *filename)
 
 static void print_matrix(char *mat_name, GLfloat* mat)
 {
-    printf("%s = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n\n", mat_name,
-        mat[0], mat[4], mat[8], mat[12], 
-        mat[1], mat[5], mat[9], mat[13], 
-        mat[2], mat[6], mat[10], mat[14], 
-        mat[3], mat[7], mat[11], mat[15]);
+    printf(
+        "%s = [%f %f %f %f\n     %f %f %f %f\n     %f %f %f %f\n     %f %f %f %f]\n\n", mat_name,
+                    mat[0], mat[4], mat[8], mat[12], 
+                    mat[1], mat[5], mat[9], mat[13], 
+                    mat[2], mat[6], mat[10], mat[14], 
+                    mat[3], mat[7], mat[11], mat[15]
+    );
 }
 
 int main(int argc, char** argv) {
@@ -553,10 +704,10 @@ int main(int argc, char** argv) {
 
     /* read in vertices from file if file given */
     if (argc == 2 && ALLOW_FILES) read_vertices_from_file(argv[1]);
+    if (argc == 3 && strcmp(argv[2], "secret_kiwi") == 0) read_kiwi_from_file(argv[1]);
 
 	// Create the shaders and perform other one-time initializations
 	init();
-    print_matrix("R_0", Rs[0]);
 	// event loop
     while (!glfwWindowShouldClose(window)) {
 
@@ -586,11 +737,10 @@ int main(int argc, char** argv) {
         if (read_from_file)
         {
             glUniformMatrix4fv(m_location, 1, GL_TRUE, M);   // send the updated model transformation matrix to the GPU
-            glDrawElements(GL_TRIANGLES, num_verts, GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, inds_vec.size(), GL_UNSIGNED_INT, 0);
         }
         else
         {
-            print_matrix("M_0", Ms[0]);
             glUniformMatrix4fv(m_location, 1, GL_TRUE, Ms[0]);   // send the updated model transformation matrix to the GPU
             glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);    // draw a triangle between the first vertex and each successive vertex pair in the hard-coded model
 
@@ -600,8 +750,6 @@ int main(int argc, char** argv) {
             glUniformMatrix4fv(m_location, 1, GL_TRUE, Ms[2]);   // send the updated model transformation matrix to the GPU
             glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(6 * sizeof(GLfloat)));
         }
-
-        
 
 		glFlush();	// ensure that all OpenGL calls have executed before swapping buffers
 
