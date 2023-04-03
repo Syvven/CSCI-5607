@@ -1,0 +1,25 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskLabel": "task-CMakeLists",
+      "appliesTo": "CMakeLists.txt",
+      "type": "launch"
+    },
+    {
+      "taskLabel": "task-CMakeLists",
+      "appliesTo": "CMakeLists.txt",
+      "type": "launch"
+    },
+    {
+      "taskLabel": "task-assignment2a",
+      "appliesTo": "/",
+      "type": "launch"
+    },
+    {
+      "taskLabel": "task-CMakeLists",
+      "appliesTo": "CMakeLists.txt",
+      "type": "launch"
+    }
+  ]
+}

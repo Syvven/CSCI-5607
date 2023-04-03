@@ -1,0 +1,15 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "assignment2a.exe",
+      "name": "assignment2a.exe",
+      "args": [
+        "D:\\Projects\\CSCI-5607\\assignment2a\\assignment2a\\data\\cat.txt"
+      ]
+    }
+  ]
+}

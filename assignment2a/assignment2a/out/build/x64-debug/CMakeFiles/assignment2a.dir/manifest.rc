@@ -1,0 +1,2 @@
+#pragma code_page(65001)
+1 /* CREATEPROCESS_MANIFEST_RESOURCE_ID */ 24 /* RT_MANIFEST */ "D:/Projects/CSCI-5607/assignment2a/assignment2a/out/build/x64-debug/CMakeFiles/assignment2a.dir/embed.manifest"
