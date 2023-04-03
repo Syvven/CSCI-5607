@@ -1,7 +1,7 @@
-prefix=D:/Projects/CSCI-5607/assignment2a/assignment2a/out/install/x64-debug
+prefix=C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2a/assignment2a/out/install/x64-debug
 exec_prefix=${prefix}
-includedir=D:/Projects/CSCI-5607/assignment2a/assignment2a/out/install/x64-debug/include
-libdir=D:/Projects/CSCI-5607/assignment2a/assignment2a/out/install/x64-debug/lib
+includedir=C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2a/assignment2a/out/install/x64-debug/include
+libdir=C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2a/assignment2a/out/install/x64-debug/lib
 
 Name: GLFW
 Description: A multi-platform library for OpenGL, window and input

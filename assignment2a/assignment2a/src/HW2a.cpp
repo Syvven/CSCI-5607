@@ -47,8 +47,8 @@ typedef struct Color3D {
 static GLint m_location;
 static GLFWcursor* hand_cursor, * arrow_cursor; // some different cursors
 
-const GLint window_width = 500,
-            window_height = 500;
+const GLint window_width = 1500,
+            window_height = 1500;
 
 const GLdouble ww_inv = 1.0f / window_width,
                wh_inv = 1.0f / window_height;
@@ -123,8 +123,11 @@ static GLfloat rot_ang       = 0.0f,
 
 /* values for extra credit */
 std::vector<Vector2D> vertices_vec;
+Vector2D* vertices;
 std::vector<Color3D> colors_vec;
+Color3D* colors;
 std::vector<unsigned int> inds_vec;
+unsigned int* indices;
 bool read_from_file = false,
      read_kiwi_file = false;
 GLint num_verts = 0;
@@ -399,7 +402,6 @@ static void reset()
 
     up_state = down_state = right_state = left_state = translate = false;
     
-
     for (int i = 0; i < 16; i++)
     {
         Rs[0][i] = Rs[1][i] = Rs[2][i] = (i % 5 == 0);
@@ -444,46 +446,71 @@ void init( void )
 
     if (!read_kiwi_file) for (int i = 0; i < num_verts; i++) inds_vec.push_back(i);
 
-    size_t colors_size = num_verts * sizeof(Color3D);
-    size_t verts_size = num_verts * sizeof(Vector2D);
+    size_t colors_size = colors_vec.size() * sizeof(Color3D);
+    size_t verts_size = vertices_vec.size() * sizeof(Vector2D);
     size_t inds_size = inds_vec.size() * sizeof(unsigned int);
 
-    Color3D* colors = colors_vec.data();
-    Vector2D* vertices = vertices_vec.data();
-    unsigned int* indices = inds_vec.data();
+    colors = colors_vec.data();
+    vertices = vertices_vec.data();
+    indices = inds_vec.data();
         
     // Create and bind a vertex array object
+
+    /* creates the vertex array object */
     glGenVertexArrays(1, vao);
+
+    /* this gens the buffer for the vao for color/texture/vertices */
     glGenBuffers(1, &buffer);
+    /* this gens the buffer for the vao for indices of the triangles */
     glGenBuffers(1, &ebo);
 
+    /* binds the current vertex array (as you can have multiple) */
     glBindVertexArray(vao[0]);
     
+    /* binds the current buffer */
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    /* sets how much data this buffer will be able to store */
     glBufferData(
         GL_ARRAY_BUFFER,
         colors_size + verts_size,
-        vertices,
+        nullptr, /* nullptr because we call subData right after */
         GL_STATIC_DRAW
     );
 
-
+    /* some asserts just in case */
     assert(sizeof(GLfloat) * 2 == sizeof(Vector2D));
     assert(sizeof(GLfloat) * 3 == sizeof(Color3D));
-    assert(verts_size == (sizeof(GLfloat) * 2 * vertices_vec.size()));
-    assert(colors_size == (sizeof(GLfloat) * 3 * colors_vec.size()));
-
-    glBufferSubData(GL_ARRAY_BUFFER, 0, verts_size, vertices);
-    glBufferSubData(GL_ARRAY_BUFFER, verts_size, colors_size, colors);
-
+    assert(verts_size == (sizeof(GLfloat) * 2 * num_verts));
+    assert(colors_size == (sizeof(GLfloat) * 3 * num_verts));
     assert(inds_size == (sizeof(unsigned int) * inds_vec.size()));
 
+    /* actually puts the data from verts into the first slots of the array buffer */
+    glBufferSubData(
+        GL_ARRAY_BUFFER, 
+        0, verts_size, 
+        vertices
+    );
+    /* actually puts the data from the colors into the rest of the array buffer */
+    glBufferSubData(
+        GL_ARRAY_BUFFER, 
+        verts_size, colors_size, 
+        colors
+    );
+
+    /* binds the next buffer for the triangle indices */
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    /* sets how much size the buffer will need */
     glBufferData(
         GL_ELEMENT_ARRAY_BUFFER, 
         inds_size, 
-        indices,
+        nullptr, /* nullptr because we call subData right after */
         GL_STATIC_DRAW
+    );
+    /* actually puts the indices into the buffer object */
+    glBufferSubData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        0, inds_size,
+        indices
     );
 
     // Define the names of the shader files
@@ -538,13 +565,10 @@ static void read_kiwi_from_file(char* filename)
     {
         if (line[0] == '\n') continue;
 
-        char keyword[100];
-        int ret = sscanf(line, "%s", keyword);
-
-        if (strcmp(keyword, "v") == 0)
+        if (line[0] == 'v')
         {
             Vector2D vertex;  float throwaway;
-            ret = sscanf(line, "v %f %f %f",
+            int ret = sscanf(line, "v %f %f %f",
                 &vertex.x, &vertex.y, &throwaway
             );
 
@@ -555,12 +579,16 @@ static void read_kiwi_from_file(char* filename)
                 exit(EXIT_FAILURE);
             }
 
+            GLfloat newx = vertex.x * cos(-0.5*pi) + vertex.y * -sin(-0.5*pi);
+            GLfloat newy = vertex.x * sin(-0.5*pi) + vertex.y *  cos(-0.5*pi);
+            vertex.x = newx; vertex.y = newy;
+
             vertices_vec.push_back(vertex);
             colors_vec.push_back(color);
         }
-        if (strcmp(keyword, "c") == 0)
+        if (line[0] == 'c')
         {
-            ret = sscanf(line, "c %f %f %f",
+            int ret = sscanf(line, "c %f %f %f",
                 &color.r, &color.g, &color.b
             );
 
@@ -571,10 +599,10 @@ static void read_kiwi_from_file(char* filename)
                 exit(EXIT_FAILURE);
             }
         }
-        if (strcmp(keyword, "f") == 0)
+        if (line[0] == 'f')
         {
             unsigned int v0, v1, v2, v3;
-            ret = sscanf(line, "f %d %d %d %d",
+            int ret = sscanf(line, "f %d %d %d %d",
                 &v0, &v1, &v2, &v3
             );
             if (ret == EOF) break;
@@ -659,11 +687,11 @@ int main(int argc, char** argv) {
     prev_x = 0.0;
     prev_y = 0.0;
 
-    // Define the error callback function
-    glfwSetErrorCallback(error_callback);
-    
     // Initialize GLFW (performs platform-specific initialization)
     if (!glfwInit()) exit(EXIT_FAILURE);
+
+    // Define the error callback function
+    glfwSetErrorCallback(error_callback);
     
     // Ask for OpenGL 3.2
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -703,7 +731,7 @@ int main(int argc, char** argv) {
     glfwSetCursorPosCallback(window, cursor_pos_callback);
 
     /* read in vertices from file if file given */
-    if (argc == 2 && ALLOW_FILES) read_vertices_from_file(argv[1]);
+    if (argc == 2) read_vertices_from_file(argv[1]);
     if (argc == 3 && strcmp(argv[2], "secret_kiwi") == 0) read_kiwi_from_file(argv[1]);
 
 	// Create the shaders and perform other one-time initializations
