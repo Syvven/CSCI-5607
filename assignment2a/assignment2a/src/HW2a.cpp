@@ -12,8 +12,7 @@
 #include <vector>
 #include <assert.h>
 
-#define DEBUG_ON 1  // repetitive of the debug flag in the shader loading code, included here for clarity only
-#define ALLOW_FILES 1 
+#define DEBUG_ON 0  // repetitive of the debug flag in the shader loading code, included here for clarity only
 
 // This file contains the code that reads the shaders from their files and compiles them
 #include "ShaderStuff.hpp"
@@ -47,8 +46,8 @@ typedef struct Color3D {
 static GLint m_location;
 static GLFWcursor* hand_cursor, * arrow_cursor; // some different cursors
 
-const GLint window_width = 1500,
-            window_height = 1500;
+const GLint window_width = 1920,
+            window_height = 1080;
 
 const GLdouble ww_inv = 1.0f / window_width,
                wh_inv = 1.0f / window_height;
@@ -116,7 +115,7 @@ static bool rot = false;
 static GLfloat rot_ang       = 0.0f,
                rot_speed     = 0.0f,
                rot_dir       = 0.0f,
-               rot_max_speed = 0.1f,
+               rot_max_speed = 0.2f,
                rot_accel     = 0.0005,
                rot_decel     = 0.0005,
                R_SPEED_MOD   = 0.1f;
@@ -210,23 +209,28 @@ mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     {
         if (action == GLFW_PRESS)
         {
+            /* translation start */
             if (!rot && !sub_rot_1 && !sub_rot_2 && !sub_rot_3 && mods == GLFW_MOD_CONTROL)
             {
                 move_x = 2 * mouse_x * ww_inv - 1.0f;
                 move_y = 2 * -mouse_y * wh_inv + 1.0f;
                 translate = true;
             }
-            else if (!translate && !one_press && !two_press && !thr_press)
+            /* rotation of full model start */
+            else if (!translate && ((!one_press && !two_press && !thr_press) || read_from_file))
                 rot = true;
+            /* rotation of sub models start */
             else
             {
+                prev_x = mouse_x - window_width * 0.5;
+                prev_y = mouse_y - window_height * 0.5;
+
                 if (one_press) sub_rot_1 = true;
                 if (two_press) sub_rot_2 = true;
                 if (thr_press) sub_rot_3 = true;
             }
-
         }
-
+        /* end of any, simplify by just setting all to false */
         else if (action == GLFW_RELEASE)
         {
             translate = false;
@@ -253,44 +257,44 @@ cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
     GLfloat mouse_x_r = xpos - window_width * 0.5;
     GLfloat mouse_y_r = ypos - window_height * 0.5;
 
+    /* yes this is ugly */
+    GLfloat dir, speed;
+    if (rot || sub_rot_1 || sub_rot_2 || sub_rot_3)
+    {
+        /* calculate angle between previous mouse vector and current */
+        dir = atan2(
+            mouse_x_r * prev_y - mouse_y_r * prev_x,
+            mouse_x_r * prev_x + mouse_y_r * prev_y
+        );
+
+        /* cap speed to the max speed or min or 0.0 */
+        speed = std::min(std::max(abs(dir), 0.0f), rot_max_speed);
+        /* get the direction of movement */
+        dir = std::copysign(1.0f, dir);
+    }
+
     if (rot)
     {
-        rot_dir = atan2(
-            mouse_x_r * prev_y - mouse_y_r * prev_x, 
-            mouse_x_r * prev_x + mouse_y_r * prev_y
-        );
-
-        rot_dir = std::copysign(1.0f, rot_dir);
+        rot_dir = dir;
+        rot_speed = speed;
     }
 
-    if (sub_rot_1)
+    if (sub_rot_1 && one_press)
     {
-        sub_rot_dir_1 = atan2(
-            mouse_x_r * prev_y - mouse_y_r * prev_x,
-            mouse_x_r * prev_x + mouse_y_r * prev_y
-        );
-
-        sub_rot_dir_1 = std::copysign(1.0f, sub_rot_dir_1);
+        sub_rot_speed_1 = speed;
+        sub_rot_dir_1 = dir;
     }
 
-    if (sub_rot_2)
+    if (sub_rot_2 && two_press)
     {
-        sub_rot_dir_2 = atan2(
-            mouse_x_r * prev_y - mouse_y_r * prev_x,
-            mouse_x_r * prev_x + mouse_y_r * prev_y
-        );
-
-        sub_rot_dir_2 = std::copysign(1.0f, sub_rot_dir_2);
+        sub_rot_speed_2 = speed;
+        sub_rot_dir_2 = dir;
     }
 
-    if (sub_rot_3)
+    if (sub_rot_3 && thr_press)
     {
-        sub_rot_dir_3 = atan2(
-            mouse_x_r * prev_y - mouse_y_r * prev_x,
-            mouse_x_r * prev_x + mouse_y_r * prev_y
-        );
-
-        sub_rot_dir_3 = std::copysign(1.0f, sub_rot_dir_3);
+        sub_rot_speed_3 = speed;
+        sub_rot_dir_3 = dir;
     }
 
     if (translate)
@@ -306,6 +310,7 @@ cursor_pos_callback(GLFWwindow* window, double xpos, double ypos) {
 //----------------------------------------------------------------------------
 
 /* left is left and right is right. output stored in right */
+/* does an in place multiplication but its okay in this case because each column is cached before being overwriten */
 static void multiply_matrices(GLfloat* left, GLfloat* right)
 {
     for (int i = 0; i < 4; i++)
@@ -325,8 +330,8 @@ static void update_transformation_matrix()
     S[S_Y_IND] += up_state    * S_POS_MOD + down_state * S_NEG_MOD;
     S[S_X_IND] += right_state * S_POS_MOD + left_state * S_NEG_MOD;
 
-    if (abs(S[S_Y_IND]) < 1e-15) S[S_Y_IND] = 0.0001;
-    if (abs(S[S_X_IND]) < 1e-15) S[S_X_IND] = 0.0001;
+    if (abs(S[S_Y_IND]) < 1e-6) S[S_Y_IND] = 0.0001;
+    if (abs(S[S_X_IND]) < 1e-6) S[S_X_IND] = 0.0001;
 
     /**************** accumulate translation updates ****************/
 
@@ -335,19 +340,12 @@ static void update_transformation_matrix()
 
     /**************** accumulte rotation updates ****************/
 
-    /* ramp up speed until it goes beyond max speed */
-    rot_speed       += (rot_accel * rot       * (rot_speed       < rot_max_speed));
-
-    sub_rot_speed_1 += (rot_accel * sub_rot_1 * (sub_rot_speed_1 < rot_max_speed)) + (rot_accel * rot * (rot_speed < rot_max_speed));
-    sub_rot_speed_2 += (rot_accel * sub_rot_2 * (sub_rot_speed_2 < rot_max_speed)) + (rot_accel * rot * (rot_speed < rot_max_speed));
-    sub_rot_speed_3 += (rot_accel * sub_rot_3 * (sub_rot_speed_3 < rot_max_speed)) + (rot_accel * rot * (rot_speed < rot_max_speed));
-
     /* decelerate if no longer holding mouse button */
-    rot_speed       -= (rot_decel * !rot       * (rot_speed       > 0));
+    rot_speed       -= (rot_decel * (rot_speed       > 0));
 
-    sub_rot_speed_1 -= (rot_decel * !sub_rot_1 * (sub_rot_speed_1 > 0)) - (rot_decel * !rot * (rot_speed > 0));
-    sub_rot_speed_2 -= (rot_decel * !sub_rot_2 * (sub_rot_speed_2 > 0)) - (rot_decel * !rot * (rot_speed > 0));
-    sub_rot_speed_3 -= (rot_decel * !sub_rot_3 * (sub_rot_speed_3 > 0)) - (rot_decel * !rot * (rot_speed > 0));
+    sub_rot_speed_1 -= (rot_decel * (sub_rot_speed_1 > 0));
+    sub_rot_speed_2 -= (rot_decel * (sub_rot_speed_2 > 0));
+    sub_rot_speed_3 -= (rot_decel * (sub_rot_speed_3 > 0));
 
     rot_ang       += rot_speed       * rot_dir;
 
@@ -355,8 +353,14 @@ static void update_transformation_matrix()
     sub_rot_ang_2 += sub_rot_speed_2 * sub_rot_dir_2 + (rot_speed * rot_dir);
     sub_rot_ang_3 += sub_rot_speed_3 * sub_rot_dir_3 + (rot_speed * rot_dir);
 
+    rot_speed       *= rot_speed       > 0;
+    sub_rot_speed_1 *= sub_rot_speed_1 > 0;
+    sub_rot_speed_2 *= sub_rot_speed_2 > 0;
+    sub_rot_speed_3 *= sub_rot_speed_3 > 0;
+
     if (read_from_file)
     {
+        /* rotation when just one big model */
         R[0] = cos(rot_ang); R[1] = -sin(rot_ang);
         R[4] = sin(rot_ang); R[5] = cos(rot_ang);
 
@@ -367,6 +371,7 @@ static void update_transformation_matrix()
     }
     else
     {
+        /* rotation when able to rotate everything seperately */
         Rs[0][0] = cos(sub_rot_ang_1); Rs[0][1] = -sin(sub_rot_ang_1);
         Rs[0][4] = sin(sub_rot_ang_1); Rs[0][5] =  cos(sub_rot_ang_1);
         
@@ -388,6 +393,7 @@ static void update_transformation_matrix()
     }
 }
 
+/* just puts everything to default state */
 static void reset()
 {
     sub_rot_dir_1 = sub_rot_speed_1 = sub_rot_ang_1 = 0.0f;
@@ -444,12 +450,15 @@ void init( void )
         vertices_vec.push_back(Vector2D(-0.25, -0.5));  // mid-lower left
     }
 
+    /* assume the user puts the triangles in order and doesn't have special indices */
     if (!read_kiwi_file) for (int i = 0; i < num_verts; i++) inds_vec.push_back(i);
 
+    /* precompute sizes so it looks nicer */
     size_t colors_size = colors_vec.size() * sizeof(Color3D);
     size_t verts_size = vertices_vec.size() * sizeof(Vector2D);
     size_t inds_size = inds_vec.size() * sizeof(unsigned int);
 
+    /* get the data because of vectors being funny */
     colors = colors_vec.data();
     vertices = vertices_vec.data();
     indices = inds_vec.data();
@@ -548,6 +557,12 @@ void init( void )
 
 //----------------------------------------------------------------------------
 
+/* 
+    I was incredibly lazy and didn't want to manually copy all the 
+     colors onto the vertices and try to figure it all out so there's a 
+     special function to read the kiwi obj file. I had to learn some regex
+     already to fix the face defs, I didn't want to do more work :)
+*/
 static void read_kiwi_from_file(char* filename)
 {
     std::cout << "Loading Secret Kiwi :)" << std::endl;
@@ -558,6 +573,8 @@ static void read_kiwi_from_file(char* filename)
         fprintf(stderr, "Failed To Open File: %s\n", filename);
         return;
     }
+
+    /* standard reading in */
 
     char line[512];
     Color3D color;
@@ -668,6 +685,7 @@ static void read_vertices_from_file(char *filename)
     }
 }
 
+/* just a helper */
 static void print_matrix(char *mat_name, GLfloat* mat)
 {
     printf(
@@ -762,6 +780,7 @@ int main(int argc, char** argv) {
             print_matrix("T", T);
         }
 
+        /* draw elements instead of draw arrays because its easier */
         if (read_from_file)
         {
             glUniformMatrix4fv(m_location, 1, GL_TRUE, M);   // send the updated model transformation matrix to the GPU
