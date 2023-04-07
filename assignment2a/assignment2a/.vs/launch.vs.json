@@ -8,7 +8,8 @@
       "projectTarget": "assignment2a.exe",
       "name": "assignment2a.exe",
       "args": [
-        "D:\\Projects\\CSCI-5607\\assignment2a\\assignment2a\\data\\cat.txt",
+        "D:\\Projects\\CSCI-5607\\assignment2a\\assignment2a\\data\\kiwer.txt",
+        "secret_kiwi"
       ]
     }
   ]

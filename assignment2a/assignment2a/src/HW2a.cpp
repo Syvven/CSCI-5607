@@ -99,7 +99,9 @@ static int S_X_IND = 0,
            S_Z_IND = 10;
 
 static GLfloat S_POS_MOD =  0.05f,
-               S_NEG_MOD = -0.05f;
+               S_NEG_MOD = -0.05f,
+               min_scale_x = 0.01f,
+               min_scale_y = 0.01f;
 
 
 /* rotation matrix */
@@ -330,8 +332,8 @@ static void update_transformation_matrix()
     S[S_Y_IND] += up_state    * S_POS_MOD + down_state * S_NEG_MOD;
     S[S_X_IND] += right_state * S_POS_MOD + left_state * S_NEG_MOD;
 
-    if (abs(S[S_Y_IND]) < 1e-6) S[S_Y_IND] = 0.0001;
-    if (abs(S[S_X_IND]) < 1e-6) S[S_X_IND] = 0.0001;
+    S[S_X_IND] = std::max(S[S_X_IND], min_scale_x);
+    S[S_Y_IND] = std::max(S[S_Y_IND], min_scale_y);
 
     /**************** accumulate translation updates ****************/
 

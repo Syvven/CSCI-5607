@@ -7,10 +7,11 @@
     - Right Arrow Button Widens
     - Up and Down Stretch and Compact
     - Not Allowed To Scale to 0
-    - I ignored the part of the grading criteria that says don't let it flip.
-        - why? whats the point? everything still works so why shouldn't it be allowed to flip?
-        - therefore, it stays in.
-        - thank you for coming to my TED Talk
+    - ~~I ignored the part of the grading criteria that says don't let it flip.~~
+        - ~~why? whats the point? everything still works so why shouldn't it be allowed to flip?~~
+        - ~~therefore, it stays in.~~
+        - ~~thank you for coming to my TED Talk~~
+    - Prof Interrante said to make it not flip so unfortunately I capped the size :(
 
 - **Rotation**
     - Left mouse button rotates the object
