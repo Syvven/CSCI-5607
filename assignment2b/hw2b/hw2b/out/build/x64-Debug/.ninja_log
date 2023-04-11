@@ -1,0 +1,24 @@
+# ninja log v5
+46	1147	7029407960744161	ext/glfw/src/CMakeFiles/glfw.dir/vulkan.c.obj	b52bd57062e13177
+7	1187	7029407960804002	CMakeFiles/HW2b.dir/ext/glad/src/glad.c.obj	bb3e1e9071b186e2
+13	1194	7029407960754139	ext/glfw/src/CMakeFiles/glfw.dir/init.c.obj	3ee640efe03f9f31
+20	1207	7029407960923677	ext/glfw/src/CMakeFiles/glfw.dir/window.c.obj	bfd6b704e7d45d7c
+52	1219	7029407960883795	ext/glfw/src/CMakeFiles/glfw.dir/win32_init.c.obj	7eccc9dee714e56c
+57	1229	7029407961013450	ext/glfw/src/CMakeFiles/glfw.dir/win32_joystick.c.obj	c8eb4eb2871b147d
+35	1238	7029407960963581	ext/glfw/src/CMakeFiles/glfw.dir/context.c.obj	ae13d345f570833f
+41	1248	7029407961153072	ext/glfw/src/CMakeFiles/glfw.dir/monitor.c.obj	a8ba66fbadeb6231
+27	1250	7029407960923677	ext/glfw/src/CMakeFiles/glfw.dir/input.c.obj	2fbbc1dcca06a887
+1	1743	7029407966688264	CMakeFiles/HW2b.dir/src/main.cpp.obj	e4b5c126ad892650
+1195	1864	7029407968024693	ext/glfw/src/CMakeFiles/glfw.dir/win32_thread.c.obj	2d36c7e4f8a9fc43
+1221	1905	7029407968413649	ext/glfw/src/CMakeFiles/glfw.dir/win32_window.c.obj	f4731b3a7ee93870
+1238	1915	7029407968593172	ext/glfw/src/CMakeFiles/glfw.dir/egl_context.c.obj	6802e108eed1c73f
+1209	1938	7029407968832530	ext/glfw/src/CMakeFiles/glfw.dir/wgl_context.c.obj	aa17476bcb50b4b8
+1179	1973	7029407969181606	ext/glfw/src/CMakeFiles/glfw.dir/win32_monitor.c.obj	296da5b604b9bf4c
+1188	1974	7029407969201548	ext/glfw/src/CMakeFiles/glfw.dir/win32_time.c.obj	2e19106e0219455b
+1229	2026	7029407969740113	ext/glfw/src/CMakeFiles/glfw.dir/osmesa_context.c.obj	c0be88d243bd2bb7
+2026	2084	7029407970291381	ext/glfw/src/glfw3.lib	74f83c2ce3d03b8d
+2085	2478	7029407974098098	HW2b.exe	bb1ee6949215c543
+1	964	7029408461304060	CMakeFiles/HW2b.dir/src/main.cpp.obj	e4b5c126ad892650
+966	1179	7029408463059347	HW2b.exe	bb1ee6949215c543
+2	976	7029408709441750	CMakeFiles/HW2b.dir/src/main.cpp.obj	e4b5c126ad892650
+978	1258	7029408711825391	HW2b.exe	bb1ee6949215c543
