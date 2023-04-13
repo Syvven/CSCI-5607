@@ -83,26 +83,26 @@
 			[
 				{
 					"backtrace" : 4,
-					"define" : "MY_DATA_DIR=\"D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/data/\""
+					"define" : "MY_DATA_DIR=\"C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/data/\""
 				},
 				{
 					"backtrace" : 5,
-					"define" : "MY_SRC_DIR=\"D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/src/\""
+					"define" : "MY_SRC_DIR=\"C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/src/\""
 				}
 			],
 			"includes" : 
 			[
 				{
 					"backtrace" : 6,
-					"path" : "D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/ext"
+					"path" : "C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/ext"
 				},
 				{
 					"backtrace" : 6,
-					"path" : "D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/ext/glfw/include"
+					"path" : "C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/ext/glfw/include"
 				},
 				{
 					"backtrace" : 6,
-					"path" : "D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/ext/glad/include"
+					"path" : "C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/ext/glad/include"
 				}
 			],
 			"language" : "CXX",
@@ -126,26 +126,26 @@
 			[
 				{
 					"backtrace" : 4,
-					"define" : "MY_DATA_DIR=\"D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/data/\""
+					"define" : "MY_DATA_DIR=\"C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/data/\""
 				},
 				{
 					"backtrace" : 5,
-					"define" : "MY_SRC_DIR=\"D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/src/\""
+					"define" : "MY_SRC_DIR=\"C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/src/\""
 				}
 			],
 			"includes" : 
 			[
 				{
 					"backtrace" : 6,
-					"path" : "D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/ext"
+					"path" : "C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/ext"
 				},
 				{
 					"backtrace" : 6,
-					"path" : "D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/ext/glfw/include"
+					"path" : "C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/ext/glfw/include"
 				},
 				{
 					"backtrace" : 6,
-					"path" : "D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/ext/glad/include"
+					"path" : "C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/ext/glad/include"
 				}
 			],
 			"language" : "C",

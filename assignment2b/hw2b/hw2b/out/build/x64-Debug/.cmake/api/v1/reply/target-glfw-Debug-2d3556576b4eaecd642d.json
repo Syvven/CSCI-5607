@@ -109,11 +109,11 @@
 			[
 				{
 					"backtrace" : 4,
-					"define" : "MY_DATA_DIR=\"D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/data/\""
+					"define" : "MY_DATA_DIR=\"C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/data/\""
 				},
 				{
 					"backtrace" : 5,
-					"define" : "MY_SRC_DIR=\"D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/src/\""
+					"define" : "MY_SRC_DIR=\"C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/src/\""
 				},
 				{
 					"backtrace" : 6,
@@ -128,15 +128,15 @@
 			[
 				{
 					"backtrace" : 8,
-					"path" : "D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/ext/glfw/include"
+					"path" : "C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/ext/glfw/include"
 				},
 				{
 					"backtrace" : 9,
-					"path" : "D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/ext/glfw/src"
+					"path" : "C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/ext/glfw/src"
 				},
 				{
 					"backtrace" : 9,
-					"path" : "D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/out/build/x64-Debug/ext/glfw/src"
+					"path" : "C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/out/build/x64-Debug/ext/glfw/src"
 				}
 			],
 			"language" : "C",
@@ -184,7 +184,7 @@
 		],
 		"prefix" : 
 		{
-			"path" : "D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/out/install/x64-Debug"
+			"path" : "C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/out/install/x64-Debug"
 		}
 	},
 	"name" : "glfw",

@@ -172,19 +172,19 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		switch ( key ) {
 			case GLFW_KEY_ESCAPE: glfwSetWindowShouldClose(window, GL_TRUE); break;
 			case GLFW_KEY_Q:      glfwSetWindowShouldClose(window, GL_TRUE); break;
-			case GLFW_KEY_UP: {
+			case GLFW_KEY_W: {
 				Globals::camera.go_dir += 1.f;
 				break;
 			}
-			case GLFW_KEY_DOWN: {
+			case GLFW_KEY_S: {
 				Globals::camera.go_dir += -1.f;
 				break;
 			}
-			case GLFW_KEY_LEFT: {
+			case GLFW_KEY_A: {
 				Globals::camera.strafe_dir += 1.f;
 				break;
 			}
-			case GLFW_KEY_RIGHT: {
+			case GLFW_KEY_D: {
 				Globals::camera.strafe_dir += -1.f;
 				break;
 			}
@@ -196,24 +196,28 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 				Globals::camera.ascend_dir += 1.f;
 				break;
 			}
+			case GLFW_KEY_RIGHT
+			{
+
+			}
 		}
 	}
 	if (action == GLFW_RELEASE)
 	{
 		switch (key) {
-			case GLFW_KEY_UP: {
+			case GLFW_KEY_W: {
 				Globals::camera.go_dir += -1.f;
 				break;
 			}
-			case GLFW_KEY_DOWN: {
+			case GLFW_KEY_S: {
 				Globals::camera.go_dir += 1.f;
 				break;
 			}
-			case GLFW_KEY_LEFT: {
+			case GLFW_KEY_A: {
 				Globals::camera.strafe_dir += -1.f;
 				break;
 			}
-			case GLFW_KEY_RIGHT: {
+			case GLFW_KEY_D: {
 				Globals::camera.strafe_dir += 1.f;
 				break;
 			}
