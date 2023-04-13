@@ -41,8 +41,17 @@ public:
 	T data[3];
 
 	// Functions
+	void operator=(const Vec<D, T>& ovec)
+	{
+		for (size_t i = 0; i < D; ++i) data[i] = ovec[i];
+	}
+
 	T operator[](int i) const { return data[i]; }
 	T& operator[](int i){ return data[i]; }
+
+	void operator*=(const T& f)
+	{ for (size_t i = 0; i < D; ++i) data[i] *= f; }
+
 	Vec<D,T> &operator += (const Vec<D,T> &x) {
 		for(size_t i=0; i<D; ++i){ data[i] += x[i]; }
 		return *this;
@@ -61,6 +70,11 @@ public:
 	void normalize() {
 		double l = len(); if( l<=0.0 ){ return; }
 		for(size_t i=0; i<D; ++i){ data[i] = data[i] / l; }
+	}
+
+	void print()
+	{
+		printf("(%f, %f, %f)\n", data[0], data[1], data[2]);
 	}
 };
 

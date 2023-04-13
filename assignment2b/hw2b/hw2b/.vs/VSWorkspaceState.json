@@ -1,6 +1,8 @@
 {
   "ExpandedNodes": [
     "",
+    "\\data",
+    "\\data\\sponza",
     "\\src"
   ],
   "SelectedNode": "\\src\\main.cpp",

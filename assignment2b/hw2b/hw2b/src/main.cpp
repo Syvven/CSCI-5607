@@ -53,6 +53,80 @@ static inline const Vec3f operator*(const Mat4x4 &m, const Vec3f &v){
 }
 
 
+class Cam3d {
+public:
+	Mat4x4 view, projection;
+	Vec3f n, u, v, d, eye;
+	float near, far, left, right, top, bottom;
+
+	Cam3d() { near = far = left = right = top = bottom = 0; }
+
+	Cam3d(Vec3f& eye_, Vec3f& dir, Vec3f& up,
+			float near, float far, 
+			float left, float right, float top, float bottom) {
+
+		this->near  = near;  this->far    = far;
+		this->top   = top;   this->bottom = bottom;
+		this->right = right; this->left   = left;
+
+		projection.m[0] = (2 * near) / (right - left);
+		projection.m[8] = (right + left) / (right - left);
+		projection.m[5] = (2 * near) / (top - bottom);
+		projection.m[9] = (top + bottom) / (top - bottom);
+		projection.m[10] = -((far + near) / (far - near));
+		projection.m[14] = (-2 * far * near) / (far - near);
+		projection.m[11] = -1;
+
+		eye = eye_;
+
+		n = dir;
+		dir *= -1.f;
+		dir.normalize();
+
+		u = up.cross(n);
+		u.normalize();
+
+		v = n.cross(u);
+		v.normalize();
+
+		d = Vec3f(
+			-(eye.dot(u)),
+			-(eye.dot(v)),
+			-(eye.dot(n))
+		);
+
+		this->view.m[0] = u[0];  this->view.m[4] = u[1]; this->view.m[8] = u[2];
+		this->view.m[12] = d[0];
+
+		this->view.m[1] = v[0];  this->view.m[5] = v[1]; this->view.m[9] = v[2];
+		this->view.m[13] = d[1];
+
+		this->view.m[2] = n[0]; this->view.m[6] = n[1]; this->view.m[10] = n[2];
+		this->view.m[14] = d[2];
+
+		this->view.m[15] = 1;
+	}
+
+	void update_eye(float x, float y, float z)
+	{
+		this->eye[0] += x;
+		this->eye[1] += y;
+		this->eye[2] += z;
+
+		d = Vec3f(
+			-(eye.dot(u)),
+			-(eye.dot(v)),
+			-(eye.dot(n))
+		);
+
+		this->view.m[12] = d[0];
+		this->view.m[13] = d[1];
+		this->view.m[14] = d[2];
+	}
+	/*void update_dir();
+	void update_up();*/
+};
+
 //
 //	Global state variables
 //
@@ -65,8 +139,8 @@ namespace Globals {
 
 	//  Model, view and projection matrices, initialized to the identity
 	Mat4x4 model; // not used in this assignment; included for completeness only
-	Mat4x4 view;
-	Mat4x4 projection;
+
+	Cam3d camera;
 }
 
 
@@ -81,6 +155,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		switch ( key ) {
 			case GLFW_KEY_ESCAPE: glfwSetWindowShouldClose(window, GL_TRUE); break;
 			case GLFW_KEY_Q: glfwSetWindowShouldClose(window, GL_TRUE); break;
+			case GLFW_KEY_UP: Globals::camera.update_eye(0.1, 0, 0);
             // ToDo: update the viewing transformation matrix according to key presses
 		}
 	}
@@ -116,27 +191,47 @@ int main(int argc, char *argv[]){
     	// This code should eventually be replaced by the use of an appropriate projection matrix
     	// FYI: the model dimensions are: center = (0,0,0); height: 30.6; length: 40.3; width: 17.0
     // find the extremum of the vertex locations (this approach works because the model is known to be centered; a more complicated method would be required in the general case)
-    float min, max, scale;
-    min = Globals::mesh.vertices[0][0]; max = Globals::mesh.vertices[0][0];
+    Vec3f min, max, scale;
+    min = Globals::mesh.vertices[0]; max = Globals::mesh.vertices[0];
 	for( int i=0; i<Globals::mesh.vertices.size(); ++i ){
-           if (Globals::mesh.vertices[i][0] < min) min = Globals::mesh.vertices[i][0];
-           else if (Globals::mesh.vertices[i][0] > max) max = Globals::mesh.vertices[i][0];
-           if (Globals::mesh.vertices[i][1] < min) min = Globals::mesh.vertices[i][1];
-           else if (Globals::mesh.vertices[i][1] > max) max = Globals::mesh.vertices[i][1];
-           if (Globals::mesh.vertices[i][2] < min) min = Globals::mesh.vertices[i][2];
-           else if (Globals::mesh.vertices[i][2] > max) max = Globals::mesh.vertices[i][2];
+           if (Globals::mesh.vertices[i][0] < min[0]) min[0] = Globals::mesh.vertices[i][0];
+           else if (Globals::mesh.vertices[i][0] > max[0]) max[0] = Globals::mesh.vertices[i][0];
+           if (Globals::mesh.vertices[i][1] < min[1]) min[1] = Globals::mesh.vertices[i][1];
+           else if (Globals::mesh.vertices[i][1] > max[1]) max[1] = Globals::mesh.vertices[i][1];
+           if (Globals::mesh.vertices[i][2] < min[2]) min[2] = Globals::mesh.vertices[i][2];
+           else if (Globals::mesh.vertices[i][2] > max[2]) max[2] = Globals::mesh.vertices[i][2];
     }
     // work with positive numbers
-    if (min < 0) min = -min;
+    /*if (min < 0) min = -min;*/
     // scale so that the component that is most different from 0 is mapped to 1 (or -1); all other values will then by definition fall between -1 and 1
-    if (max > min) scale = 1/max; else scale = 1/min;
+    /*if (max > min) scale = 1/max; else scale = 1/min;*/
     	
 	// scale the model vertices by brute force
-    Mat4x4 mscale; mscale.make_scale( scale, scale, scale );
+    /*Mat4x4 mscale; mscale.make_scale( scale, scale, scale );
 	for( int i=0; i<Globals::mesh.vertices.size(); ++i ){
            Globals::mesh.vertices[i] = mscale*Globals::mesh.vertices[i];
-    }
+    }*/
     // The above can be removed once a proper projection matrix is defined
+
+	/* define the camera initial view params */
+
+	Globals::camera = Cam3d(
+		Vec3f(
+			min[0] + (max[0] - min[0])*0.5f,
+			min[1] + 3.0f, 
+			min[2] + (max[2] - min[2])*0.5f
+		), /* eye */
+		Vec3f(1.f, -1.f, 0.f), /* dir */
+		Vec3f(0.f, 1.f, 0.f), /* up */
+		1.f, 100.f, /* near, far */
+		-1.f, 1.f, 1.f, -1.f /* left, right, top, bottom */
+	);
+
+	float left = -1.f; float bottom = -1.f;
+	float right = 1.f; float top	=  1.f;
+	float near = 1.f; float far = 100.f;
+
+	
 
 	// Set up the window variable
 	GLFWwindow* window;
@@ -204,8 +299,8 @@ int main(int argc, char *argv[]){
 
 		// Send updated info to the GPU
 		glUniformMatrix4fv( shader.uniform("model"), 1, GL_FALSE, Globals::model.m  ); // model transformation (always the identity matrix in this assignment)
-		glUniformMatrix4fv( shader.uniform("view"), 1, GL_FALSE, Globals::view.m  ); // viewing transformation
-		glUniformMatrix4fv( shader.uniform("projection"), 1, GL_FALSE, Globals::projection.m ); // projection matrix
+		glUniformMatrix4fv( shader.uniform("view"), 1, GL_FALSE, Globals::camera.view.m  ); // viewing transformation
+		glUniformMatrix4fv( shader.uniform("projection"), 1, GL_FALSE, Globals::camera.projection.m ); // projection matrix
 
 		// Draw
 		glDrawElements(GL_TRIANGLES, Globals::mesh.faces.size()*3, GL_UNSIGNED_INT, 0);
