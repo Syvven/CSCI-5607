@@ -2,9 +2,8 @@
   "ExpandedNodes": [
     "",
     "\\data",
-    "\\data\\sponza",
     "\\src"
   ],
-  "SelectedNode": "\\src\\main.cpp",
+  "SelectedNode": "\\src\\trimesh.hpp",
   "PreviewInSolutionExplorer": false
 }

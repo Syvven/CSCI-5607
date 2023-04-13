@@ -10,7 +10,7 @@
 #include <cstring> // memcpy
 
 // Constants
-#define WIN_WIDTH 1920
+#define WIN_WIDTH 1080
 #define WIN_HEIGHT 1080
 
 class Mat4x4 {
@@ -59,35 +59,41 @@ public:
 	Vec3f n, u, v, d, eye;
 	float near, far, left, right, top, bottom;
 
+	/* camera state variables */
+	bool ascending, strafing, going; /* Y, X, Z */
+	float ascend_speed, strafe_speed, go_speed;
+	float ascend_dir, strafe_dir, go_dir;
+
 	Cam3d() { near = far = left = right = top = bottom = 0; }
 
 	Cam3d(Vec3f& eye_, Vec3f& dir, Vec3f& up,
 			float near, float far, 
-			float left, float right, float top, float bottom) {
+			float left, float right, float top, float bottom,
+			float s_speed, float a_speed, float g_speed) {
 
+		/* movement state variables */
+		ascending = strafing = going = false;
+		ascend_dir = strafe_dir = go_dir = 0;
+		ascend_speed = a_speed;
+		strafe_speed = s_speed;
+		go_speed     = g_speed;
+		
+		/* define the frustrum and projection matrix */
 		this->near  = near;  this->far    = far;
 		this->top   = top;   this->bottom = bottom;
 		this->right = right; this->left   = left;
 
-		projection.m[0] = (2 * near) / (right - left);
-		projection.m[8] = (right + left) / (right - left);
-		projection.m[5] = (2 * near) / (top - bottom);
-		projection.m[9] = (top + bottom) / (top - bottom);
-		projection.m[10] = -((far + near) / (far - near));
-		projection.m[14] = (-2 * far * near) / (far - near);
+		projection.m[0] = (2 * near) / (right - left);   projection.m[12] = -near*(right + left) / (right - left);
+		projection.m[5] = (2 * near) / (top - bottom);   projection.m[13] = -near*(top + bottom) / (top   - bottom);
+		projection.m[10] = -(far + near) / (far - near); projection.m[14] = (2 * far * near)     / (near  - far);
 		projection.m[11] = -1;
 
+		/* define the viewing matrix*/
+
 		eye = eye_;
-
-		n = dir;
-		dir *= -1.f;
-		dir.normalize();
-
-		u = up.cross(n);
-		u.normalize();
-
-		v = n.cross(u);
-		v.normalize();
+		n = dir; n *= -1.f; n.normalize();
+		u = up.cross(n); u.normalize();
+		v = n.cross(u); v.normalize();
 
 		d = Vec3f(
 			-(eye.dot(u)),
@@ -107,11 +113,21 @@ public:
 		this->view.m[15] = 1;
 	}
 
-	void update_eye(float x, float y, float z)
+	void update() { update_eye(); }
+
+	void update_eye()
 	{
-		this->eye[0] += x;
-		this->eye[1] += y;
-		this->eye[2] += z;
+		float sum = abs(strafe_dir) + abs(ascend_dir) + abs(go_dir) + 9e-5;
+
+		this->eye += this->n * (
+			-1 * go_dir * go_speed / sum
+		);
+		this->eye += this->u * (
+			-1 * strafe_dir * strafe_speed / sum
+		);
+		this->eye += this->v * (
+			ascend_dir * ascend_speed / sum
+		);
 
 		d = Vec3f(
 			-(eye.dot(u)),
@@ -123,6 +139,7 @@ public:
 		this->view.m[13] = d[1];
 		this->view.m[14] = d[2];
 	}
+	
 	/*void update_dir();
 	void update_up();*/
 };
@@ -154,9 +171,60 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	if( action == GLFW_PRESS ){
 		switch ( key ) {
 			case GLFW_KEY_ESCAPE: glfwSetWindowShouldClose(window, GL_TRUE); break;
-			case GLFW_KEY_Q: glfwSetWindowShouldClose(window, GL_TRUE); break;
-			case GLFW_KEY_UP: Globals::camera.update_eye(0.1, 0, 0);
-            // ToDo: update the viewing transformation matrix according to key presses
+			case GLFW_KEY_Q:      glfwSetWindowShouldClose(window, GL_TRUE); break;
+			case GLFW_KEY_UP: {
+				Globals::camera.go_dir += 1.f;
+				break;
+			}
+			case GLFW_KEY_DOWN: {
+				Globals::camera.go_dir += -1.f;
+				break;
+			}
+			case GLFW_KEY_LEFT: {
+				Globals::camera.strafe_dir += 1.f;
+				break;
+			}
+			case GLFW_KEY_RIGHT: {
+				Globals::camera.strafe_dir += -1.f;
+				break;
+			}
+			case GLFW_KEY_LEFT_BRACKET: {
+				Globals::camera.ascend_dir += -1.f;
+				break;
+			}
+			case GLFW_KEY_RIGHT_BRACKET: {
+				Globals::camera.ascend_dir += 1.f;
+				break;
+			}
+		}
+	}
+	if (action == GLFW_RELEASE)
+	{
+		switch (key) {
+			case GLFW_KEY_UP: {
+				Globals::camera.go_dir += -1.f;
+				break;
+			}
+			case GLFW_KEY_DOWN: {
+				Globals::camera.go_dir += 1.f;
+				break;
+			}
+			case GLFW_KEY_LEFT: {
+				Globals::camera.strafe_dir += -1.f;
+				break;
+			}
+			case GLFW_KEY_RIGHT: {
+				Globals::camera.strafe_dir += 1.f;
+				break;
+			}
+			case GLFW_KEY_LEFT_BRACKET: {
+				Globals::camera.ascend_dir += 1.f;
+				break;
+			}
+			case GLFW_KEY_RIGHT_BRACKET: {
+				Globals::camera.ascend_dir += -1.f;
+				break;
+			}
 		}
 	}
 }
@@ -164,9 +232,9 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 	Globals::win_width = float(width);
 	Globals::win_height = float(height);
-    	Globals::aspect = Globals::win_width/Globals::win_height;
+    Globals::aspect = Globals::win_width/Globals::win_height;
 	
-    	glViewport(0,0,width,height);
+    glViewport(0,0,width,height);
 
 	// ToDo: update the perspective matrix as the window size changes
 
@@ -176,6 +244,10 @@ static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 // Function to set up geometry
 void init_scene();
 
+void update()
+{
+	Globals::camera.update();
+}
 
 //
 //	Main
@@ -215,23 +287,20 @@ int main(int argc, char *argv[]){
 
 	/* define the camera initial view params */
 
+	float near = 0.1f; float far = 100.f;
+
 	Globals::camera = Cam3d(
 		Vec3f(
 			min[0] + (max[0] - min[0])*0.5f,
 			min[1] + 3.0f, 
 			min[2] + (max[2] - min[2])*0.5f
 		), /* eye */
-		Vec3f(1.f, -1.f, 0.f), /* dir */
+		Vec3f(1.f, 0.f, 0.f), /* dir */
 		Vec3f(0.f, 1.f, 0.f), /* up */
-		1.f, 100.f, /* near, far */
-		-1.f, 1.f, 1.f, -1.f /* left, right, top, bottom */
+		near, far, /* near, far */
+		-near*0.5, near*0.5, near*0.5, -near*0.5, /* left, right, top, bottom */
+		0.05, 0.05, 0.05 /* speed in X Y Z */
 	);
-
-	float left = -1.f; float bottom = -1.f;
-	float right = 1.f; float top	=  1.f;
-	float near = 1.f; float far = 100.f;
-
-	
 
 	// Set up the window variable
 	GLFWwindow* window;
@@ -296,6 +365,8 @@ int main(int argc, char *argv[]){
 
 		// Clear the color and depth buffers
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		update();
 
 		// Send updated info to the GPU
 		glUniformMatrix4fv( shader.uniform("model"), 1, GL_FALSE, Globals::model.m  ); // model transformation (always the identity matrix in this assignment)
