@@ -73,6 +73,8 @@ public:
 
 	bool moving, boosting;
 
+	int moving_flags = 0b000000;
+
 	Cam3d() {}
 
 	Cam3d(Vec3f& eye_, Vec3f& dir_, Vec3f& up_,
@@ -83,7 +85,7 @@ public:
 		/* movement state variables */
 		moving = boosting = false;
 
-		dt = 0.01f; 
+		dt = 0.01f;
 		phi = theta = 0.f;
 		turn_speed = 1.7f;
 		move_speed = 5.f;
@@ -99,36 +101,27 @@ public:
 		/* define the viewing matrix*/
 
 		dir = dir_; up = up_; eye = eye_;
-
-		n = dir; n *= -1.f; n.normalize();
-		u = up.cross(n); u.normalize();
-		v = n.cross(u); v.normalize();
-
-		d = Vec3f(
-			-(eye.dot(u)),
-			-(eye.dot(v)),
-			-(eye.dot(n))
-		);
+		update_n();  update_u(); update_v(); update_d();
 
 		setup_projection(); setup_view();
 	}
 
 	void setup_projection()
 	{
-		projection.m[0] = (2 * near) / (right - left);   projection.m[12] = -near * (right + left) / (right - left);
-		projection.m[5] = (2 * near) / (top - bottom);   projection.m[13] = -near * (top + bottom) / (top - bottom);
+		projection.m[0] = (2 * near) / (right - left);   projection.m[8] = (right + left) / (right - left);
+		projection.m[5] = (2 * near) / (top - bottom);   projection.m[9] = (top + bottom) / (top - bottom);
 		projection.m[10] = -(far + near) / (far - near); projection.m[14] = (2 * far * near) / (near - far);
 		projection.m[11] = -1;
 	}
+
+	void update_n()
+	{ n = dir; n *= -1.f; n.normalize(); }
 
 	void update_u()
 	{ u = up.cross(n); u.normalize(); }
 
 	void update_v()
 	{ v = n.cross(u); v.normalize(); }
-
-	void update_n()
-	{ n = dir; n *= -1.f; n.normalize(); }
 
 	void update_d()
 	{
@@ -168,11 +161,14 @@ public:
 			float sinphi = sin(phi);
 			float sinp = sin(p);
 
-			forward_dir[0] = sinp * cost; forward_dir[1] = cos(p); forward_dir[2] = -sinp * sint;
-			up_dir[0] = sinphi * cost; up_dir[1] = cos(phi); up_dir[2] = -sint * sinphi;
-			right_dir[0] = cos(theta); right_dir[1] = 0; right_dir[2] = -sin(theta);
+			forward_dir[0] = sinp * cost;   forward_dir[1] = cos(p);   forward_dir[2] = -sinp * sint;
+			up_dir     [0] = sinphi * cost; up_dir     [1] = cos(phi); up_dir     [2] = -sint * sinphi;
+			right_dir  [0] = cos(theta);    right_dir  [1] = 0;        right_dir  [2] = -sin(theta);
 
-			negMove.normalize(); posMove.normalize(); vertMove.normalize();
+			/*negMove.normalize(); posMove.normalize(); vertMove.normalize();*/
+
+			dir = forward_dir;
+			up = up_dir;
 
 			if (boosting)
 			{
@@ -191,11 +187,13 @@ public:
 			up_dir      *= velocity[1];
 			forward_dir *= velocity[2];
 
-			eye += right_dir; eye += up_dir; eye += forward_dir;
-			dir = forward_dir;
-			up = up_dir;
+			if (moving_flags)
+			{
+				eye += right_dir; eye += up_dir; eye += forward_dir;
+			}
 
-			update_n(); update_u(); update_v(); update_d(); setup_view();
+			update_n(); update_u(); update_v(); update_d();
+			setup_view();
 		/*}*/
 	}
 };
@@ -238,26 +236,32 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 			case GLFW_KEY_Q:      glfwSetWindowShouldClose(window, GL_TRUE); break;
 			case GLFW_KEY_W: {
 				Globals::camera.posMove[2] = 1.f;
+				Globals::camera.moving_flags |= 0b000001;
 				break;
 			}
 			case GLFW_KEY_S: {
 				Globals::camera.negMove[2] = -1.f;
+				Globals::camera.moving_flags |= 0b000010;
 				break;
 			}
 			case GLFW_KEY_A: {
 				Globals::camera.negMove[0] = -1.f;
+				Globals::camera.moving_flags |= 0b000100;
 				break;
 			}
 			case GLFW_KEY_D: {
 				Globals::camera.posMove[0] = 1.f;
+				Globals::camera.moving_flags |= 0b001000;
 				break;
 			}
 			case GLFW_KEY_LEFT_CONTROL: {
 				Globals::camera.negMove[1] = -1.f;
+				Globals::camera.moving_flags |= 0b010000;
 				break;
 			}
 			case GLFW_KEY_SPACE: {
 				Globals::camera.posMove[1] = 1.f;
+				Globals::camera.moving_flags |= 0b100000;
 				break;
 			}
 			case GLFW_KEY_RIGHT:
@@ -292,26 +296,32 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		switch (key) {
 			case GLFW_KEY_W: {
 				Globals::camera.posMove[2] = 0.f;
+				Globals::camera.moving_flags ^= 0b000001;
 				break;
 			}
 			case GLFW_KEY_S: {
 				Globals::camera.negMove[2] = 0.f;
+				Globals::camera.moving_flags ^= 0b000010;
 				break;
 			}
 			case GLFW_KEY_A: {
 				Globals::camera.negMove[0] = 0.f;
+				Globals::camera.moving_flags ^= 0b000100;
 				break;
 			}
 			case GLFW_KEY_D: {
 				Globals::camera.posMove[0] = 0.f;
+				Globals::camera.moving_flags ^= 0b001000;
 				break;
 			}
 			case GLFW_KEY_LEFT_CONTROL: {
 				Globals::camera.negMove[1] = 0.f;
+				Globals::camera.moving_flags ^= 0b010000;
 				break;
 			}
 			case GLFW_KEY_SPACE: {
 				Globals::camera.posMove[1] = 0.f;
+				Globals::camera.moving_flags ^= 0b100000;
 				break;
 			}
 			case GLFW_KEY_RIGHT:
