@@ -26,6 +26,7 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <assert.h>
 
 //
 //	Vector Class
@@ -52,9 +53,14 @@ public:
 	void operator*=(const T& f)
 	{ for (size_t i = 0; i < D; ++i) data[i] *= f; }
 
-	Vec<D,T> &operator += (const Vec<D,T> &x) {
+	Vec<D,T>& operator += (const Vec<D,T> &x) {
 		for(size_t i=0; i<D; ++i){ data[i] += x[i]; }
 		return *this;
+	}
+	Vec<D, T> operator+(const Vec<D, T>& x)
+	{
+		assert(D == 3);
+		return Vec<3,T>(data[0] + x[0], data[1]+x[1], data[2]+x[2]);
 	}
 	double len2() const { return this->dot(*this); } // squared length
 	double len() const { return sqrt(len2()); } // length
@@ -145,6 +151,7 @@ void TriMesh::need_normals( bool recompute ){
 		const Vec3f &p0 = vertices[ face[0] ];
 		const Vec3f &p1 = vertices[ face[1] ];
 		const Vec3f &p2 = vertices[ face[2] ];
+		
 		Vec3f a = p0-p1,  b = p1-p2, c = p2-p0;
 		float l2a = a.len2(), l2b = b.len2(), l2c = c.len2();
 		if (!l2a || !l2b || !l2c){ continue; } // check for zeros or nans
@@ -189,7 +196,6 @@ bool TriMesh::load_obj( std::string file ){
 	//
 	std::ifstream infile( file.c_str() );
 	if( infile.is_open() ){
-
 		std::string line;
 		while( std::getline( infile, line ) ){
 
@@ -205,8 +211,8 @@ bool TriMesh::load_obj( std::string file ){
 
 				// Next three colors
 				float cx, cy, cz;
-				if( ss >> cx >> cy >> cz ){
-					temp_colors.push_back( Vec3f(cx,cy,cz) );
+				if (ss >> cx >> cy >> cz) {
+					temp_colors.push_back(Vec3f(cx, cy, cz));
 				} else {
 					temp_colors.push_back( Vec3f(0.3f,0.3f,0.3f) );
 				}
@@ -217,7 +223,6 @@ bool TriMesh::load_obj( std::string file ){
 				float x, y, z; ss >> x >> y >> z;
 				temp_normals.push_back( Vec3f(x,y,z) );
 			}
-
 		} // end loop lines
 
 	} // end load obj
@@ -230,18 +235,24 @@ bool TriMesh::load_obj( std::string file ){
 	if( infile2.is_open() ){
 
 		std::string line;
+		Vec3f curr_color = Vec3f(-1, 0, 0);
 		while( std::getline( infile2, line ) ){
 
 			std::stringstream ss(line);
 			std::string tok; ss >> tok;
 
+			if (tok == "c")
+			{
+				float cx, cy, cz; ss >> cx >> cy >> cz;
+				curr_color = Vec3f(cx, cy, cz);
+			}
+
 			// Face
 			if( tok == "f" ){
-
 				Vec3i face;
 				// Get the three vertices
 				for( size_t i=0; i<3; ++i ){
-
+					
 					std::string f_str; ss >> f_str;
 					std::vector<std::string> f_vals;
 					split_str( '/', f_str, &f_vals );
@@ -250,7 +261,8 @@ bool TriMesh::load_obj( std::string file ){
 					face[i] = vertices.size();
 					int v_idx = std::stoi(f_vals[0])-1;
 					vertices.push_back( temp_verts[v_idx] );
-					colors.push_back( temp_colors[v_idx] );
+					if (curr_color[0] < 0) colors.push_back(temp_colors[v_idx]);
+					else colors.push_back(curr_color);
 
 					// Check for normal
 					if( f_vals.size()>2 ){
@@ -264,9 +276,11 @@ bool TriMesh::load_obj( std::string file ){
 				// If it's a quad, make another triangle
 				std::string last_vert="";
 				if( ss >> last_vert ){
+
 					Vec3i face2;
 					face2[0] = face[0];
 					face2[1] = face[2];
+					face2[2] = vertices.size();
 
 					std::vector<std::string> f_vals;
 					split_str( '/', last_vert, &f_vals );
@@ -274,8 +288,8 @@ bool TriMesh::load_obj( std::string file ){
 
 					int v_idx = std::stoi(f_vals[0])-1;
 					vertices.push_back( temp_verts[v_idx] );
-					colors.push_back( temp_colors[v_idx] );
-					face2[2] = vertices.size();
+					if (curr_color[0] < 0) colors.push_back(temp_colors[v_idx]);
+					else colors.push_back(curr_color);
 
 					// Check for normal
 					if( f_vals.size()>2 ){
