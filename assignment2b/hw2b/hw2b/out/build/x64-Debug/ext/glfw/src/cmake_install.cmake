@@ -1,8 +1,8 @@
-# Install script for directory: D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/ext/glfw/src
+# Install script for directory: C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/ext/glfw/src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/out/install/x64-Debug")
+  set(CMAKE_INSTALL_PREFIX "C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/out/install/x64-Debug")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -33,6 +33,6 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE STATIC_LIBRARY FILES "D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/out/build/x64-Debug/ext/glfw/src/glfw3.lib")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE STATIC_LIBRARY FILES "C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/out/build/x64-Debug/ext/glfw/src/glfw3.lib")
 endif()
 

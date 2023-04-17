@@ -1,8 +1,8 @@
-# Install script for directory: D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b
+# Install script for directory: C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/out/install/x64-Debug")
+  set(CMAKE_INSTALL_PREFIX "C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/out/install/x64-Debug")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -34,7 +34,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/out/build/x64-Debug/ext/glfw/cmake_install.cmake")
+  include("C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/out/build/x64-Debug/ext/glfw/cmake_install.cmake")
 
 endif()
 
@@ -46,5 +46,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/out/build/x64-Debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/out/build/x64-Debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

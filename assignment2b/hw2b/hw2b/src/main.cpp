@@ -87,7 +87,7 @@ public:
 
 		dt = 0.01f;
 		phi = theta = 0.f;
-		turn_speed = 1.7f;
+		turn_speed = 2.5f;
 		move_speed = 5.f;
 		boost_speed = 2.f;
 		fovy = PI / 4;
@@ -140,8 +140,6 @@ public:
 
 		this->view.m[2] = n[0]; this->view.m[6] = n[1]; this->view.m[10] = n[2];
 		this->view.m[14] = d[2];
-
-		this->view.m[15] = 1;
 	}
 
 	void update()
@@ -170,18 +168,11 @@ public:
 			dir = forward_dir;
 			up = up_dir;
 
-			if (boosting)
-			{
-				posMove *= boost_speed;
-				negMove *= boost_speed;
-				vertMove *= boost_speed;
-			}
-
 			velocity[0] = posMove[0] + negMove[0] + vertMove[0];
 			velocity[1] = posMove[1] + negMove[1] + vertMove[1];
 			velocity[2] = posMove[2] + negMove[2];
 
-			velocity *= (move_speed * dt);
+			velocity *= (move_speed * dt * (2*boosting + 1*!boosting));
 
 			right_dir   *= velocity[0];
 			up_dir      *= velocity[1];
@@ -368,9 +359,7 @@ static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 void init_scene();
 
 void update()
-{
-	Globals::camera.update();
-}
+{ Globals::camera.update(); }
 
 //
 //	Main
@@ -415,7 +404,7 @@ int main(int argc, char *argv[]){
 
 	/* define the camera initial view params */
 
-	float near = 0.01f; float far = 1000.f;
+	float near = 0.0001f; float far = 1000.f;
 
 	Globals::camera = Cam3d(
 		Vec3f(
