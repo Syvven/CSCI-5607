@@ -9,12 +9,24 @@
 #include "shader.hpp"
 #include <cstring> // memcpy
 
+#include <iostream>
 #include <math.h>
+#include <iomanip>
+#include <sstream>
 
 // Constants
 #define WIN_WIDTH 1080
 #define WIN_HEIGHT 1080
 #define PI 3.14159265358979323846  /* pi */
+
+/* https://cplusplus.com/forum/beginner/275937/ */
+constexpr size_t nmax{ 100 };
+static size_t number_of_digits(float n) {
+	std::ostringstream strs;
+
+	strs << n;
+	return strs.str().size();
+}
 
 class Mat4x4 {
 public:
@@ -36,10 +48,30 @@ public:
 	}
 
 	void print(){
-		std::cout << m[0] << ' ' <<  m[4] << ' ' <<  m[8]  << ' ' <<  m[12] << "\n";
+
+		size_t max_len_per_column[nmax];
+		for (size_t j = 0; j < 4; ++j) {
+			size_t max_len{};
+
+			for (size_t i = 0; i < 4; ++i)
+			{
+				const auto num_length = number_of_digits(m[j * 4 + i]);
+				if (num_length > max_len) max_len = num_length;
+			}
+
+			max_len_per_column[j] = max_len;
+		}
+
+		for (size_t i = 0; i < 4; ++i)
+			for (size_t j = 0; j < 4; ++j)
+				std::cout << (j == 0 ? "\n| " : "") << std::setw(max_len_per_column[j]) << m[i*4 + j] << (j == 3 ? " |" : " ");
+
+		std::cout << '\n';
+
+		/*std::cout << m[0] << ' ' <<  m[4] << ' ' <<  m[8]  << ' ' <<  m[12] << "\n";
 		std::cout << m[1] << ' ' <<   m[5] << ' ' <<  m[9]  << ' ' <<   m[13] << "\n";
 		std::cout << m[2] << ' ' <<   m[6] << ' ' <<  m[10] << ' ' <<   m[14] << "\n";
-		std::cout << m[3] << ' ' <<   m[7] << ' ' <<  m[11] << ' ' <<   m[15] << "\n";
+		std::cout << m[3] << ' ' <<   m[7] << ' ' <<  m[11] << ' ' <<   m[15] << "\n";*/
 	}
 
 	void make_scale(float x, float y, float z){
@@ -103,7 +135,7 @@ public:
 		dir = dir_; up = up_; eye = eye_;
 		update_n();  update_u(); update_v(); update_d();
 
-		setup_projection(); setup_view();
+		setup_view(); setup_projection();
 	}
 
 	void setup_projection()
@@ -132,14 +164,20 @@ public:
 
 	void setup_view()
 	{
-		this->view.m[0] = u[0];  this->view.m[4] = u[1]; this->view.m[8] = u[2];
-		this->view.m[12] = d[0];
+		view.m[0]  = u[0]; view.m[4] = u[1]; view.m[8]  = u[2];
+		view.m[12] = d[0];
 
-		this->view.m[1] = v[0];  this->view.m[5] = v[1]; this->view.m[9] = v[2];
-		this->view.m[13] = d[1];
+		view.m[1]  = v[0]; view.m[5] = v[1]; view.m[9]  = v[2];
+		view.m[13] = d[1];
 
-		this->view.m[2] = n[0]; this->view.m[6] = n[1]; this->view.m[10] = n[2];
-		this->view.m[14] = d[2];
+		view.m[2]  = n[0]; view.m[6] = n[1]; view.m[10] = n[2];
+		view.m[14] = d[2];
+
+		/*u.print();
+		v.print();
+		n.print();
+		eye.print();
+		view.print();*/
 	}
 
 	void update()
@@ -163,16 +201,14 @@ public:
 			up_dir     [0] = sinphi * cost; up_dir     [1] = cos(phi); up_dir     [2] = -sint * sinphi;
 			right_dir  [0] = cos(theta);    right_dir  [1] = 0;        right_dir  [2] = -sin(theta);
 
-			/*negMove.normalize(); posMove.normalize(); vertMove.normalize();*/
+			negMove.normalize(); posMove.normalize();
 
 			dir = forward_dir;
 			up = up_dir;
 
-			velocity[0] = posMove[0] + negMove[0] + vertMove[0];
-			velocity[1] = posMove[1] + negMove[1] + vertMove[1];
-			velocity[2] = posMove[2] + negMove[2];
-
-			velocity *= (move_speed * dt * (2*boosting + 1*!boosting));
+			velocity = posMove;
+			velocity += negMove;
+			velocity *= (move_speed * dt * (2*boosting + !boosting));
 
 			right_dir   *= velocity[0];
 			up_dir      *= velocity[1];
@@ -189,9 +225,6 @@ public:
 	}
 };
 
-//
-//	Global state variables
-//
 typedef struct GLmodel
 {
 	GLuint verts_vbo[1], colors_vbo[1], 
@@ -200,19 +233,15 @@ typedef struct GLmodel
 	TriMesh mesh;
 } GLmodel;
 
+//
+//	Global state variables
+//
 namespace Globals {
 	double cursorX, cursorY; // cursor positions
-	float win_width, win_height; // window size
-	float aspect;
-	
-	GLmodel church, secret_kiwi;
-	//  Model, view and projection matrices, initialized to the identity
-
-	Cam3d camera;
+	float win_width, win_height, aspect; /* window size */
+	GLmodel church, secret_kiwi; /* models for church and kiwi */
+	Cam3d camera; /* camera class */
 }
-
-
-
 
 //
 //	Callbacks
@@ -408,9 +437,10 @@ int main(int argc, char *argv[]){
 
 	Globals::camera = Cam3d(
 		Vec3f(
-			min[0] + (max[0] - min[0])*0.5f,
+			/*min[0] + (max[0] - min[0])*0.5f,
 			min[1] + 3.0f, 
-			min[2] + (max[2] - min[2])*0.5f
+			min[2] + (max[2] - min[2])*0.5f*/
+			0,0,0
 		), /* eye */
 		Vec3f(0.f, 0.f, -1.f), /* dir */
 		Vec3f(0.f, 1.f, 0.f), /* up */
@@ -484,22 +514,22 @@ int main(int argc, char *argv[]){
 		update();
 
 		// Send updated info to the GPU
-
-		glUniformMatrix4fv(shader.uniform("view"), 1, GL_FALSE, Globals::camera.view.m); // viewing transformation
-		glUniformMatrix4fv(shader.uniform("projection"), 1, GL_FALSE, Globals::camera.projection.m); // projection matrix
-
+		
+		
 		/* draw church */
 		glBindVertexArray(Globals::church.tris_vao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Globals::church.faces_ibo[0]);
-		glDrawElements(GL_TRIANGLES, Globals::church.mesh.faces.size() * 3, GL_UNSIGNED_INT, 0);
 		glUniformMatrix4fv( shader.uniform("model"), 1, GL_FALSE, Globals::church.model.m  ); // model transformation (always the identity matrix in this assignment)
+		glDrawElements(GL_TRIANGLES, Globals::church.mesh.faces.size() * 3, GL_UNSIGNED_INT, 0);
 
 		/* draw kiwi */
 		glBindVertexArray(Globals::secret_kiwi.tris_vao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Globals::secret_kiwi.faces_ibo[0]);
 		glUniformMatrix4fv(shader.uniform("model"), 1, GL_FALSE, Globals::secret_kiwi.model.m); // model transformation (always the identity matrix in this assignment)
-		// Draw
 		glDrawElements(GL_TRIANGLES, Globals::secret_kiwi.mesh.faces.size()*3, GL_UNSIGNED_INT, 0);
+		
+		glUniformMatrix4fv(shader.uniform("view"), 1, GL_FALSE, Globals::camera.view.m); // viewing transformation
+		glUniformMatrix4fv(shader.uniform("projection"), 1, GL_FALSE, Globals::camera.projection.m); // projection matrix
 
 		// Finalize
 		glfwSwapBuffers(window);
