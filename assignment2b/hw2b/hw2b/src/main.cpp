@@ -91,59 +91,107 @@ static inline const Vec3f operator*(const Mat4x4 &m, const Vec3f &v){
 class Cam3d {
 public:
 	/* camera state variables */
-	Mat4x4 view, projection;
+	Mat4x4 view, projection, rotation;
 
 	Vec3f n, u, v, d, eye, up, dir, 
-		  negMove, posMove, vertMove,  
-		  negTurn, /* x = theta, y = phi */ posTurn,
-		  forward_dir, up_dir, right_dir, velocity;
+		  negMove, posMove, negTurn, /* x = theta, y = phi */ posTurn,
+		  forward_dir, up_dir, right_dir, velocity, 
+		  init_dir, init_up;
 
 	float near, far, left, right, top, bottom, 
-		  fovy, a_r, phi, /* rot around X */ 
-		  theta, /* rot around Y */ boost_speed,
-		  move_speed, turn_speed, dt;
+		  phi, /* rot around X */ theta, /* rot around Y */ 
+		  boost_speed, move_speed, turn_speed, dt;
 
 	bool moving, boosting;
-
+	/* easier than having a bunch of ands */
 	int moving_flags = 0b000000;
 
-	Cam3d() {}
+	Cam3d() 
+	{
+		float near = 0.0001f; float far = 1000.f;
+		init_params(
+			Vec3f(
+				/*min[0] + (max[0] - min[0])*0.5f,
+				min[1] + 3.0f,
+				min[2] + (max[2] - min[2])*0.5f*/
+				0, 0, 0
+			), /* eye */
+			Vec3f(0.f, 0.f, -1.f), /* dir */
+			Vec3f(0.f, 1.f, 0.f), /* up */
+			near, far, /* near, far */
+			-near * 0.5, near * 0.5, near * 0.5, -near * 0.5, /* left, right, top, bottom */
+			0.05, 0.05, 0.05 /* speed in X Y Z */
+		);
+	}
 
 	Cam3d(Vec3f& eye_, Vec3f& dir_, Vec3f& up_,
 			float near, float far, 
 			float left, float right, float top, float bottom,
-			float s_speed, float a_speed, float g_speed) {
+			float s_speed, float a_speed, float g_speed) 
+	{
+		init_params(
+			eye_, dir_, up_, near, far, 
+			left, right, top, bottom, s_speed, 
+			a_speed, g_speed
+		);
+	}
 
+	void init_params(Vec3f& eye_, Vec3f& dir_, Vec3f& up_,
+		float near, float far,
+		float left, float right, float top, float bottom,
+		float s_speed, float a_speed, float g_speed)
+	{
 		/* movement state variables */
 		moving = boosting = false;
 
 		dt = 0.01f;
-		phi = theta = 0.f;
+
+		float p = acos(dir_[1]);
+		phi = p - PI*0.5;
+		float t = dir_[0] / asin(p);
+		if (isnan(t)) t = 1.0f;
+		theta = acos(t) - PI * 0.5;
+
 		turn_speed = 2.5f;
 		move_speed = 5.f;
 		boost_speed = 2.f;
-		fovy = PI / 4;
-		a_r = (float)WIN_WIDTH / (float)WIN_HEIGHT;
-		
+
 		/* define the frustrum and projection matrix */
-		this->near  = near;  this->far    = far;
-		this->top   = top;   this->bottom = bottom;
-		this->right = right; this->left   = left;
+		this->near = near;   this->far = far;
+		this->top = top;     this->bottom = bottom;
+		this->right = right; this->left = left;
 
 		/* define the viewing matrix*/
-
-		dir = dir_; up = up_; eye = eye_;
-		update_n();  update_u(); update_v(); update_d();
+		init_dir = dir_; init_up = up_;
+		dir = dir_; up = up_;               eye = eye_;
+		update_n(); update_u(); update_v(); update_d();
 
 		setup_view(); setup_projection();
 	}
 
+	void adjust_perspective(float height, float width)
+	{
+		/* personal heuristic */
+		float mod_h = height / std::min(height, width);
+		float mod_w = width / std::min(height, width);
+
+		float halfn = near * 0.5;
+
+		left = halfn * -mod_w; right = halfn * mod_w;
+		top = halfn * mod_h; bottom = halfn * -mod_h;
+
+		setup_projection();
+	}
+
 	void setup_projection()
 	{
-		projection.m[0] = (2 * near) / (right - left);   projection.m[8] = (right + left) / (right - left);
-		projection.m[5] = (2 * near) / (top - bottom);   projection.m[9] = (top + bottom) / (top - bottom);
-		projection.m[10] = -(far + near) / (far - near); projection.m[14] = (2 * far * near) / (near - far);
-		projection.m[11] = -1;
+		/* transposed from in slides */
+		float ttn = 2 * near; 
+		float tmb = top - bottom;
+		projection.m[0]  = ttn / (right - left);            projection.m[5] = ttn / tmb; 
+		projection.m[2]  = (right + left) / (right - left); projection.m[6] = (top + bottom) / tmb;
+		projection.m[10] = -(far + near) / (far - near);    projection.m[14] = -1; 
+		projection.m[11] = -(ttn*far) / (far-near);         projection.m[15] = 0.f;
 	}
 
 	void update_n()
@@ -164,20 +212,11 @@ public:
 
 	void setup_view()
 	{
-		view.m[0]  = u[0]; view.m[4] = u[1]; view.m[8]  = u[2];
-		view.m[12] = d[0];
-
-		view.m[1]  = v[0]; view.m[5] = v[1]; view.m[9]  = v[2];
-		view.m[13] = d[1];
-
-		view.m[2]  = n[0]; view.m[6] = n[1]; view.m[10] = n[2];
-		view.m[14] = d[2];
-
-		/*u.print();
-		v.print();
-		n.print();
-		eye.print();
-		view.print();*/
+		view.m[0] = u[0]; view.m[4] = v[0]; view.m[8]  = n[0];
+		view.m[1] = u[1]; view.m[5] = v[1]; view.m[9]  = n[1];
+		view.m[2] = u[2]; view.m[6] = v[2]; view.m[10] = n[2];
+		view.m[3] = d[0]; view.m[7] = d[1]; view.m[11] = d[2];
+		/*view.print();*/
 	}
 
 	void update()
@@ -197,6 +236,8 @@ public:
 			float sinphi = sin(phi);
 			float sinp = sin(p);
 
+			/* yaw pitch roll */
+
 			forward_dir[0] = sinp * cost;   forward_dir[1] = cos(p);   forward_dir[2] = -sinp * sint;
 			up_dir     [0] = sinphi * cost; up_dir     [1] = cos(phi); up_dir     [2] = -sint * sinphi;
 			right_dir  [0] = cos(theta);    right_dir  [1] = 0;        right_dir  [2] = -sin(theta);
@@ -205,6 +246,8 @@ public:
 
 			dir = forward_dir;
 			up = up_dir;
+
+			up_dir = init_up;
 
 			velocity = posMove;
 			velocity += negMove;
@@ -229,7 +272,10 @@ typedef struct GLmodel
 {
 	GLuint verts_vbo[1], colors_vbo[1], 
 		normals_vbo[1], faces_ibo[1], tris_vao;
-	Mat4x4 model;
+	std::vector<Mat4x4> model_mats;
+	std::vector<Vec3f> scales, translates;
+	std::vector<Vec3f> rotations;
+	int model_count = 1;
 	TriMesh mesh;
 } GLmodel;
 
@@ -381,14 +427,38 @@ static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0,0,width,height);
 
 	// ToDo: update the perspective matrix as the window size changes
-
+	Globals::camera.adjust_perspective(Globals::win_height, Globals::win_width);
 }
 
 // Function to set up geometry
 void init_scene();
 
+static void set_matrix(GLmodel& mod, int model)
+{
+	Mat4x4* m = &mod.model_mats[model];
+	Vec3f* r = &mod.rotations[model];
+	Vec3f* t = &mod.translates[model];
+
+	float crz = cos((*r)[2]);
+	float srz = sin((*r)[2]);
+
+	float cry = cos((*r)[1]);
+	float sry = sin((*r)[1]);
+
+	m->m[0] = crz; m->m[1] = -srz; m->m[3] = (*t)[0];
+	m->m[4] = srz; m->m[5] = crz;  m->m[7] = (*t)[1];
+	m->m[11] = (*t)[2];
+}
+
 void update()
-{ Globals::camera.update(); }
+{ 
+	Globals::camera.update(); 
+
+	for (int i = 0; i < Globals::secret_kiwi.model_count; i++)
+	{
+
+	}
+}
 
 //
 //	Main
@@ -399,10 +469,10 @@ int main(int argc, char *argv[]){
 	std::stringstream obj_file; obj_file << MY_DATA_DIR << "sibenik/sibenik.obj";
 	std::stringstream kiwi_file; kiwi_file << MY_DATA_DIR << "biwer/kiwi1.obj";
 
-	if( !Globals::church.mesh.load_obj( obj_file.str() ) ){ return 0; }
+	if( !Globals::church.mesh.load_obj(obj_file.str())){ return EXIT_FAILURE; }
 	Globals::church.mesh.print_details();
 
-	if (!Globals::secret_kiwi.mesh.load_obj(kiwi_file.str())) { return 0; }
+	if (!Globals::secret_kiwi.mesh.load_obj(kiwi_file.str())) { return EXIT_FAILURE; }
 	Globals::secret_kiwi.mesh.print_details();
 
 	// Forcibly scale the mesh vertices so that the entire model fits within a (-1,1) volume: the code below is a temporary measure that is needed to enable the entire model to be visible in the template app, before the student has defined the proper viewing and projection matrices
@@ -431,23 +501,21 @@ int main(int argc, char *argv[]){
     }*/
     // The above can be removed once a proper projection matrix is defined
 
-	/* define the camera initial view params */
-
 	float near = 0.0001f; float far = 1000.f;
-
 	Globals::camera = Cam3d(
 		Vec3f(
-			/*min[0] + (max[0] - min[0])*0.5f,
-			min[1] + 3.0f, 
-			min[2] + (max[2] - min[2])*0.5f*/
-			0,0,0
+			min[0] + (max[0] - min[0])*0.5f,
+			min[1] + 3.0f,
+			min[2] + (max[2] - min[2])*0.5f
 		), /* eye */
-		Vec3f(0.f, 0.f, -1.f), /* dir */
+		Vec3f(1.f, 0.f, 0.f), /* dir */
 		Vec3f(0.f, 1.f, 0.f), /* up */
 		near, far, /* near, far */
-		-near*0.5, near*0.5, near*0.5, -near*0.5, /* left, right, top, bottom */
+		-near * 0.5, near * 0.5, near * 0.5, -near * 0.5, /* left, right, top, bottom */
 		0.05, 0.05, 0.05 /* speed in X Y Z */
 	);
+
+	/* define the camera initial view params */
 
 	// Set up the window variable
 	GLFWwindow* window;
@@ -494,6 +562,17 @@ int main(int argc, char *argv[]){
 
 	// Initialize the scene
 	init_scene();
+
+	Globals::secret_kiwi.translates.push_back(Vec3f(
+		min[0] + 3.f,
+		min[1] + 0.8f,
+		min[2] + (max[2] - min[2]) * 0.5f
+	));
+
+	set_matrix(Globals::secret_kiwi, 0);
+
+	Globals::secret_kiwi.model_mats[0].print();
+
 	framebuffer_size_callback(window, int(Globals::win_width), int(Globals::win_height)); 
 
 	// Perform some OpenGL initializations
@@ -504,9 +583,9 @@ int main(int argc, char *argv[]){
 	shader.enable();
 
 	// Bind buffers
-    
+
 	// Game loop
-	while( !glfwWindowShouldClose(window) ){
+	while(!glfwWindowShouldClose(window)){
 
 		// Clear the color and depth buffers
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -514,22 +593,23 @@ int main(int argc, char *argv[]){
 		update();
 
 		// Send updated info to the GPU
-		
-		
+		glUniformMatrix4fv(shader.uniform("projection"), 1, GL_TRUE, Globals::camera.projection.m); // projection matrix
+		glUniformMatrix4fv(shader.uniform("view"), 1, GL_TRUE, Globals::camera.view.m); // viewing transformation
+
 		/* draw church */
 		glBindVertexArray(Globals::church.tris_vao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Globals::church.faces_ibo[0]);
-		glUniformMatrix4fv( shader.uniform("model"), 1, GL_FALSE, Globals::church.model.m  ); // model transformation (always the identity matrix in this assignment)
-		glDrawElements(GL_TRIANGLES, Globals::church.mesh.faces.size() * 3, GL_UNSIGNED_INT, 0);
+		glUniformMatrix4fv(shader.uniform("model"), 1, GL_FALSE, Globals::church.model_mats[0].m); // model transformation (always the identity matrix in this assignment)
+		glDrawElements(GL_TRIANGLES, Globals::church.mesh.faces.size()*3, GL_UNSIGNED_INT, 0);
 
 		/* draw kiwi */
 		glBindVertexArray(Globals::secret_kiwi.tris_vao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Globals::secret_kiwi.faces_ibo[0]);
-		glUniformMatrix4fv(shader.uniform("model"), 1, GL_FALSE, Globals::secret_kiwi.model.m); // model transformation (always the identity matrix in this assignment)
-		glDrawElements(GL_TRIANGLES, Globals::secret_kiwi.mesh.faces.size()*3, GL_UNSIGNED_INT, 0);
-		
-		glUniformMatrix4fv(shader.uniform("view"), 1, GL_FALSE, Globals::camera.view.m); // viewing transformation
-		glUniformMatrix4fv(shader.uniform("projection"), 1, GL_FALSE, Globals::camera.projection.m); // projection matrix
+		for (int i = 0; i < Globals::secret_kiwi.model_count; i++)
+		{
+			glUniformMatrix4fv(shader.uniform("model"), 1, GL_TRUE, Globals::secret_kiwi.model_mats[i].m); // model transformation (always the identity matrix in this assignment)
+			glDrawElements(GL_TRIANGLES, Globals::secret_kiwi.mesh.faces.size() * 3, GL_UNSIGNED_INT, 0);
+		}
 
 		// Finalize
 		glfwSwapBuffers(window);
@@ -599,10 +679,12 @@ void init_buffers(GLmodel& model)
 }
 
 void init_scene(){
+	init_buffers(Globals::church);
+	init_buffers(Globals::secret_kiwi);
 
-	using namespace Globals;
+	Globals::church.model_mats.push_back(Mat4x4());
 
-	init_buffers(church);
-	init_buffers(secret_kiwi);
+	Globals::secret_kiwi.model_mats.push_back(Mat4x4());
+	Globals::secret_kiwi.rotations.push_back(PI);
 }
 

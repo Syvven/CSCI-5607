@@ -2,8 +2,9 @@
   "ExpandedNodes": [
     "",
     "\\data",
+    "\\out",
     "\\src"
   ],
-  "SelectedNode": "\\ext",
+  "SelectedNode": "\\src\\shader.hpp",
   "PreviewInSolutionExplorer": false
 }
