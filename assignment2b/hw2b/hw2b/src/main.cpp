@@ -93,18 +93,18 @@ public:
 	/* camera state variables */
 	Mat4x4 view, projection, rotation;
 
-	Vec3f n, u, v, d, eye, up, dir, 
+	Vec3f n, u, v, d, eye, up, forward, 
 		  negMove, posMove, negTurn, /* x = theta, y = phi */ posTurn,
-		  forward_dir, up_dir, right_dir, velocity, 
-		  init_dir, init_up;
+		  up_dir, right_dir, velocity, init_up;
 
 	float near, far, left, right, top, bottom, 
-		  phi, /* rot around X */ theta, /* rot around Y */ 
-		  boost_speed, move_speed, turn_speed, dt;
+		  yaw, pitch, roll, boost_speed, 
+		  move_speed, turn_speed, dt;
 
 	bool moving, boosting;
 	/* easier than having a bunch of ands */
-	int moving_flags = 0b000000;
+	int moving_flags   = 0b000000,
+		rotating_flags = 0b0000;
 
 	Cam3d() 
 	{
@@ -144,17 +144,12 @@ public:
 		/* movement state variables */
 		moving = boosting = false;
 
-		dt = 0.01f;
+		/* assume 60fps */
+		dt = 1.f/60.f;
 
-		float p = acos(dir_[1]);
-		phi = p - PI*0.5;
-		float t = dir_[0] / asin(p);
-		if (isnan(t)) t = 1.0f;
-		theta = acos(t) - PI * 0.5;
-
-		turn_speed = 2.5f;
-		move_speed = 5.f;
-		boost_speed = 2.f;
+		turn_speed = 1.f;
+		move_speed = 2.f;
+		boost_speed = 2.5f;
 
 		/* define the frustrum and projection matrix */
 		this->near = near;   this->far = far;
@@ -162,9 +157,11 @@ public:
 		this->right = right; this->left = left;
 
 		/* define the viewing matrix*/
-		init_dir = dir_; init_up = up_;
-		dir = dir_; up = up_;               eye = eye_;
+		init_up = up_; forward = dir_; up = up_; eye = eye_;
 		update_n(); update_u(); update_v(); update_d();
+
+		pitch = asin(-forward[1]);
+		yaw = asin(forward[0] / cos(pitch));
 
 		setup_view(); setup_projection();
 	}
@@ -195,10 +192,10 @@ public:
 	}
 
 	void update_n()
-	{ n = dir; n *= -1.f; n.normalize(); }
+	{ n = forward; n *= -1.f; n.normalize(); }
 
 	void update_u()
-	{ u = up.cross(n); u.normalize(); }
+	{ u = up.cross(n); u.normalize(); right_dir = u; }
 
 	void update_v()
 	{ v = n.cross(u); v.normalize(); }
@@ -221,50 +218,60 @@ public:
 
 	void update()
 	{ 
-		/* https://en.wikipedia.org/wiki/Spherical_coordinate_system */
-		/* allows for fully rotational camera, but there's gimbal lock possible */
-		/*if (moving)
-		{*/
-			theta += turn_speed * (negTurn[0] + posTurn[0]) * dt;
-			phi   += turn_speed * (negTurn[1] + posTurn[1]) * dt;
-
-			float t = theta + PI * 0.5;
-			float p = phi + PI * 0.5;
-
-			float cost = cos(t);
-			float sint = sin(t);
-			float sinphi = sin(phi);
-			float sinp = sin(p);
+		/* 
+			uses euler angles, gimbal lock possible 
+			I wanted to try quaternions but couldn't get them working
+			unfortunte!
+		*/
+		int flag = 0;
+		if (rotating_flags)
+		{
+			float mod = turn_speed * dt;
+			yaw += mod * (negTurn[0] + posTurn[0]);
+			pitch += mod * (negTurn[1] + posTurn[1]);
 
 			/* yaw pitch roll */
+			float yup = yaw - PI * 0.5f;
+			float cospitch = cos(pitch);
 
-			forward_dir[0] = sinp * cost;   forward_dir[1] = cos(p);   forward_dir[2] = -sinp * sint;
-			up_dir     [0] = sinphi * cost; up_dir     [1] = cos(phi); up_dir     [2] = -sint * sinphi;
-			right_dir  [0] = cos(theta);    right_dir  [1] = 0;        right_dir  [2] = -sin(theta);
+			forward = Vec3f(
+				cospitch * sin(yaw),
+				-sin(pitch),
+				cospitch * cos(yaw)
+			);
 
+			right_dir = Vec3f(sin(yup), 0.0f, cos(yup));
+			up = right_dir.cross(forward);
+
+			update_n();
+			update_u();
+			update_v();
+
+			flag = 1;
+		}
+			
+		if (moving_flags)
+		{
 			negMove.normalize(); posMove.normalize();
-
-			dir = forward_dir;
-			up = up_dir;
-
-			up_dir = init_up;
 
 			velocity = posMove;
 			velocity += negMove;
-			velocity *= (move_speed * dt * (2*boosting + !boosting));
+			velocity *= (move_speed * dt * (2 * boosting + !boosting));
 
-			right_dir   *= velocity[0];
-			up_dir      *= velocity[1];
-			forward_dir *= velocity[2];
+			eye += right_dir * velocity[0]; 
+			eye += init_up * velocity[1]; 
+			eye += forward * velocity[2];
 
-			if (moving_flags)
-			{
-				eye += right_dir; eye += up_dir; eye += forward_dir;
-			}
+			flag = 1;
+		}
 
-			update_n(); update_u(); update_v(); update_d();
+		eye.print();
+
+		if (moving_flags || rotating_flags)
+		{
+			update_d();
 			setup_view();
-		/*}*/
+		}
 	}
 };
 
@@ -333,21 +340,25 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 			case GLFW_KEY_RIGHT:
 			{
 				Globals::camera.posTurn[0] = -1.f;
+				Globals::camera.rotating_flags |= 0b0001;
 				break;
 			}
 			case GLFW_KEY_LEFT:
 			{
 				Globals::camera.negTurn[0] = 1.f;
+				Globals::camera.rotating_flags |= 0b0010;
 				break;
 			}
 			case GLFW_KEY_UP:
 			{
 				Globals::camera.posTurn[1] = -1.f;
+				Globals::camera.rotating_flags |= 0b0100;
 				break;
 			}
 			case GLFW_KEY_DOWN:
 			{
 				Globals::camera.negTurn[1] = 1.f;
+				Globals::camera.rotating_flags |= 0b1000;
 				break;
 			}
 			case GLFW_KEY_LEFT_SHIFT:
@@ -393,21 +404,25 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 			case GLFW_KEY_RIGHT:
 			{
 				Globals::camera.posTurn[0] = 0.f;
+				Globals::camera.rotating_flags ^= 0b0001;
 				break;
 			}
 			case GLFW_KEY_LEFT:
 			{
 				Globals::camera.negTurn[0] = 0.f;
+				Globals::camera.rotating_flags ^= 0b0010;
 				break;
 			}
 			case GLFW_KEY_UP:
 			{
 				Globals::camera.posTurn[1] = 0.f;
+				Globals::camera.rotating_flags ^= 0b0100;
 				break;
 			}
 			case GLFW_KEY_DOWN:
 			{
 				Globals::camera.negTurn[1] = 0.f;
+				Globals::camera.rotating_flags ^= 0b1000;
 				break;
 			}
 			case GLFW_KEY_LEFT_SHIFT:
@@ -445,9 +460,22 @@ static void set_matrix(GLmodel& mod, int model)
 	float cry = cos((*r)[1]);
 	float sry = sin((*r)[1]);
 
-	m->m[0] = crz; m->m[1] = -srz; m->m[3] = (*t)[0];
-	m->m[4] = srz; m->m[5] = crz;  m->m[7] = (*t)[1];
-	m->m[11] = (*t)[2];
+	float crx = cos((*r)[0]);
+	float srx = sin((*r)[0]);
+
+	m->m[0] = crz * cry - srz * srx * sry;
+	m->m[1] = -srz * crx;
+	m->m[2] = crz * sry + srz * srx * cry;
+
+	m->m[4] = srz * cry + crz * srx * sry;
+	m->m[5] = crz * crx;
+	m->m[6] = srz * sry - crz * srx * cry;
+
+	m->m[8] = -crx * sry;
+	m->m[9] = srx;
+	m->m[10] = crx * cry;
+
+	m->m[3] = (*t)[0]; m->m[7] = (*t)[1]; m->m[11] = (*t)[2];
 }
 
 void update()
@@ -456,7 +484,8 @@ void update()
 
 	for (int i = 0; i < Globals::secret_kiwi.model_count; i++)
 	{
-
+		Globals::secret_kiwi.rotations[i][1] += 0.01;
+		set_matrix(Globals::secret_kiwi, i);
 	}
 }
 
@@ -568,6 +597,24 @@ int main(int argc, char *argv[]){
 		min[1] + 0.8f,
 		min[2] + (max[2] - min[2]) * 0.5f
 	));
+
+	Globals::secret_kiwi.translates.push_back(Vec3f(
+		min[0] + 3.f,
+		min[1] + 0.8f,
+		min[2] + (max[2] - min[2]) * 0.5f + 2.f
+	));
+
+	Globals::secret_kiwi.translates.push_back(Vec3f(
+		min[0] + 3.f,
+		min[1] + 0.8f,
+		min[2] + (max[2] - min[2]) * 0.5f - 2.f
+	));
+
+	/* 10 -12 -2 */
+
+	Globals::secret_kiwi.translates.push_back(Vec3f(10.5, -13, -2));
+
+	Globals::secret_kiwi.translates.push_back(Vec3f(10.5, -13, 2));
 
 	set_matrix(Globals::secret_kiwi, 0);
 
@@ -684,7 +731,11 @@ void init_scene(){
 
 	Globals::church.model_mats.push_back(Mat4x4());
 
-	Globals::secret_kiwi.model_mats.push_back(Mat4x4());
-	Globals::secret_kiwi.rotations.push_back(PI);
+	Globals::secret_kiwi.model_count = 5;
+	for (int i = 0; i < Globals::secret_kiwi.model_count; i++)
+	{
+		Globals::secret_kiwi.model_mats.push_back(Mat4x4());
+		Globals::secret_kiwi.rotations.push_back(Vec3f(0.f, 0.f, PI));
+	}
 }
 

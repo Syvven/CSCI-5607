@@ -1,10 +1,10 @@
 Determining if the include file pthread.h exists failed with the following output:
-Change Dir: C:/Users/nhend/Documents/GitHub/CSCI-5607/assignment2b/hw2b/hw2b/out/build/x64-Debug/CMakeFiles/CMakeTmp
+Change Dir: D:/Projects/CSCI-5607/assignment2b/hw2b/hw2b/out/build/x64-Debug/CMakeFiles/CMakeTmp
 
-Run Build Command(s):C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe cmTC_8a6d6 && [1/2] Building C object CMakeFiles\cmTC_8a6d6.dir\CheckIncludeFile.c.obj
-FAILED: CMakeFiles/cmTC_8a6d6.dir/CheckIncludeFile.c.obj 
-C:\PROGRA~1\MICROS~3\2022\COMMUN~1\VC\Tools\MSVC\1431~1.311\bin\Hostx64\x64\cl.exe  /nologo   /DWIN32 /D_WINDOWS /W3  /MDd /Zi /Ob0 /Od /RTC1 /showIncludes /FoCMakeFiles\cmTC_8a6d6.dir\CheckIncludeFile.c.obj /FdCMakeFiles\cmTC_8a6d6.dir\ /FS -c C:\Users\nhend\Documents\GitHub\CSCI-5607\assignment2b\hw2b\hw2b\out\build\x64-Debug\CMakeFiles\CMakeTmp\CheckIncludeFile.c
-C:\Users\nhend\Documents\GitHub\CSCI-5607\assignment2b\hw2b\hw2b\out\build\x64-Debug\CMakeFiles\CMakeTmp\CheckIncludeFile.c(1): fatal error C1083: Cannot open include file: 'pthread.h': No such file or directory
+Run Build Command(s):D:/Visual Studio/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe cmTC_84700 && [1/2] Building C object CMakeFiles\cmTC_84700.dir\CheckIncludeFile.c.obj
+FAILED: CMakeFiles/cmTC_84700.dir/CheckIncludeFile.c.obj 
+"D:\Visual Studio\VC\Tools\MSVC\14.31.31103\bin\Hostx64\x64\cl.exe"  /nologo   /DWIN32 /D_WINDOWS /W3  /MDd /Zi /Ob0 /Od /RTC1 /showIncludes /FoCMakeFiles\cmTC_84700.dir\CheckIncludeFile.c.obj /FdCMakeFiles\cmTC_84700.dir\ /FS -c D:\Projects\CSCI-5607\assignment2b\hw2b\hw2b\out\build\x64-Debug\CMakeFiles\CMakeTmp\CheckIncludeFile.c
+D:\Projects\CSCI-5607\assignment2b\hw2b\hw2b\out\build\x64-Debug\CMakeFiles\CMakeTmp\CheckIncludeFile.c(1): fatal error C1083: Cannot open include file: 'pthread.h': No such file or directory
 ninja: build stopped: subcommand failed.
 
 
