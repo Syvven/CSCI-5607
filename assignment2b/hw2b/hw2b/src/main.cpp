@@ -17,16 +17,7 @@
 // Constants
 #define WIN_WIDTH 1080
 #define WIN_HEIGHT 1080
-#define PI 3.14159265358979323846  /* pi */
-
-/* https://cplusplus.com/forum/beginner/275937/ */
-constexpr size_t nmax{ 100 };
-static size_t number_of_digits(float n) {
-	std::ostringstream strs;
-
-	strs << n;
-	return strs.str().size();
-}
+#define PI 3.14159265358979323846f  /* pi */
 
 class Mat4x4 {
 public:
@@ -48,30 +39,13 @@ public:
 	}
 
 	void print(){
-
-		size_t max_len_per_column[nmax];
-		for (size_t j = 0; j < 4; ++j) {
-			size_t max_len{};
-
-			for (size_t i = 0; i < 4; ++i)
-			{
-				const auto num_length = number_of_digits(m[j * 4 + i]);
-				if (num_length > max_len) max_len = num_length;
-			}
-
-			max_len_per_column[j] = max_len;
-		}
-
-		for (size_t i = 0; i < 4; ++i)
-			for (size_t j = 0; j < 4; ++j)
-				std::cout << (j == 0 ? "\n| " : "") << std::setw(max_len_per_column[j]) << m[i*4 + j] << (j == 3 ? " |" : " ");
-
-		std::cout << '\n';
-
-		/*std::cout << m[0] << ' ' <<  m[4] << ' ' <<  m[8]  << ' ' <<  m[12] << "\n";
-		std::cout << m[1] << ' ' <<   m[5] << ' ' <<  m[9]  << ' ' <<   m[13] << "\n";
-		std::cout << m[2] << ' ' <<   m[6] << ' ' <<  m[10] << ' ' <<   m[14] << "\n";
-		std::cout << m[3] << ' ' <<   m[7] << ' ' <<  m[11] << ' ' <<   m[15] << "\n";*/
+		printf(
+			"| % 6.2f % 6.2f % 6.2f % 6.2f |\n| % 6.2f % 6.2f % 6.2f % 6.2f |\n| % 6.2f % 6.2f % 6.2f % 6.2f |\n| % 6.2f % 6.2f % 6.2f % 6.2f |\n",
+			m[0], m[1], m[2], m[3],
+			m[4], m[5], m[6], m[7],
+			m[8], m[9], m[10], m[11],
+			m[12], m[13], m[14], m[15]
+		);
 	}
 
 	void make_scale(float x, float y, float z){
@@ -213,7 +187,6 @@ public:
 		view.m[1] = u[1]; view.m[5] = v[1]; view.m[9]  = n[1];
 		view.m[2] = u[2]; view.m[6] = v[2]; view.m[10] = n[2];
 		view.m[3] = d[0]; view.m[7] = d[1]; view.m[11] = d[2];
-		/*view.print();*/
 	}
 
 	void update()
@@ -223,7 +196,6 @@ public:
 			I wanted to try quaternions but couldn't get them working
 			unfortunte!
 		*/
-		int flag = 0;
 		if (rotating_flags)
 		{
 			float mod = turn_speed * dt;
@@ -246,8 +218,6 @@ public:
 			update_n();
 			update_u();
 			update_v();
-
-			flag = 1;
 		}
 			
 		if (moving_flags)
@@ -259,13 +229,9 @@ public:
 			velocity *= (move_speed * dt * (2 * boosting + !boosting));
 
 			eye += right_dir * velocity[0]; 
-			eye += init_up * velocity[1]; 
+			eye[1] += velocity[1];
 			eye += forward * velocity[2];
-
-			flag = 1;
 		}
-
-		eye.print();
 
 		if (moving_flags || rotating_flags)
 		{
@@ -294,6 +260,7 @@ namespace Globals {
 	float win_width, win_height, aspect; /* window size */
 	GLmodel church, secret_kiwi; /* models for church and kiwi */
 	Cam3d camera; /* camera class */
+	bool kiwi_available;
 }
 
 //
@@ -482,10 +449,13 @@ void update()
 { 
 	Globals::camera.update(); 
 
-	for (int i = 0; i < Globals::secret_kiwi.model_count; i++)
+	if (Globals::kiwi_available)
 	{
-		Globals::secret_kiwi.rotations[i][1] += 0.01;
-		set_matrix(Globals::secret_kiwi, i);
+		for (int i = 0; i < Globals::secret_kiwi.model_count; i++)
+		{
+			Globals::secret_kiwi.rotations[i][1] += 0.01;
+			set_matrix(Globals::secret_kiwi, i);
+		}
 	}
 }
 
@@ -501,8 +471,16 @@ int main(int argc, char *argv[]){
 	if( !Globals::church.mesh.load_obj(obj_file.str())){ return EXIT_FAILURE; }
 	Globals::church.mesh.print_details();
 
-	if (!Globals::secret_kiwi.mesh.load_obj(kiwi_file.str())) { return EXIT_FAILURE; }
-	Globals::secret_kiwi.mesh.print_details();
+	Globals::kiwi_available = true;
+	if (!Globals::secret_kiwi.mesh.load_obj(kiwi_file.str())) { 
+		Globals::kiwi_available = false; 
+		std::cout << "The church is safe..." << std::endl;
+	}
+	else
+	{
+		std::cout << "The exits are blocked by kiwis!!" << std::endl;
+	}
+	if (Globals::kiwi_available) Globals::secret_kiwi.mesh.print_details();
 
 	// Forcibly scale the mesh vertices so that the entire model fits within a (-1,1) volume: the code below is a temporary measure that is needed to enable the entire model to be visible in the template app, before the student has defined the proper viewing and projection matrices
     	// This code should eventually be replaced by the use of an appropriate projection matrix
@@ -534,7 +512,7 @@ int main(int argc, char *argv[]){
 	Globals::camera = Cam3d(
 		Vec3f(
 			min[0] + (max[0] - min[0])*0.5f,
-			min[1] + 3.0f,
+			min[1] + 2.5f,
 			min[2] + (max[2] - min[2])*0.5f
 		), /* eye */
 		Vec3f(1.f, 0.f, 0.f), /* dir */
@@ -592,33 +570,35 @@ int main(int argc, char *argv[]){
 	// Initialize the scene
 	init_scene();
 
-	Globals::secret_kiwi.translates.push_back(Vec3f(
-		min[0] + 3.f,
-		min[1] + 0.8f,
-		min[2] + (max[2] - min[2]) * 0.5f
-	));
 
-	Globals::secret_kiwi.translates.push_back(Vec3f(
-		min[0] + 3.f,
-		min[1] + 0.8f,
-		min[2] + (max[2] - min[2]) * 0.5f + 2.f
-	));
+	if (Globals::kiwi_available)
+	{
+		Globals::secret_kiwi.translates.push_back(Vec3f(
+			min[0] + 3.f,
+			min[1] + 0.8f,
+			min[2] + (max[2] - min[2]) * 0.5f
+		));
 
-	Globals::secret_kiwi.translates.push_back(Vec3f(
-		min[0] + 3.f,
-		min[1] + 0.8f,
-		min[2] + (max[2] - min[2]) * 0.5f - 2.f
-	));
+		Globals::secret_kiwi.translates.push_back(Vec3f(
+			min[0] + 3.f,
+			min[1] + 0.8f,
+			min[2] + (max[2] - min[2]) * 0.5f + 2.f
+		));
 
-	/* 10 -12 -2 */
+		Globals::secret_kiwi.translates.push_back(Vec3f(
+			min[0] + 3.f,
+			min[1] + 0.8f,
+			min[2] + (max[2] - min[2]) * 0.5f - 2.f
+		));
 
-	Globals::secret_kiwi.translates.push_back(Vec3f(10.5, -13, -2));
+		/* 10 -12 -2 */
 
-	Globals::secret_kiwi.translates.push_back(Vec3f(10.5, -13, 2));
+		Globals::secret_kiwi.translates.push_back(Vec3f(10.5, -13, -2));
 
-	set_matrix(Globals::secret_kiwi, 0);
+		Globals::secret_kiwi.translates.push_back(Vec3f(10.5, -13, 2));
 
-	Globals::secret_kiwi.model_mats[0].print();
+		set_matrix(Globals::secret_kiwi, 0);
+	}
 
 	framebuffer_size_callback(window, int(Globals::win_width), int(Globals::win_height)); 
 
@@ -650,13 +630,17 @@ int main(int argc, char *argv[]){
 		glDrawElements(GL_TRIANGLES, Globals::church.mesh.faces.size()*3, GL_UNSIGNED_INT, 0);
 
 		/* draw kiwi */
-		glBindVertexArray(Globals::secret_kiwi.tris_vao);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Globals::secret_kiwi.faces_ibo[0]);
-		for (int i = 0; i < Globals::secret_kiwi.model_count; i++)
+		if (Globals::kiwi_available)
 		{
-			glUniformMatrix4fv(shader.uniform("model"), 1, GL_TRUE, Globals::secret_kiwi.model_mats[i].m); // model transformation (always the identity matrix in this assignment)
-			glDrawElements(GL_TRIANGLES, Globals::secret_kiwi.mesh.faces.size() * 3, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(Globals::secret_kiwi.tris_vao);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Globals::secret_kiwi.faces_ibo[0]);
+			for (int i = 0; i < Globals::secret_kiwi.model_count; i++)
+			{
+				glUniformMatrix4fv(shader.uniform("model"), 1, GL_TRUE, Globals::secret_kiwi.model_mats[i].m); // model transformation (always the identity matrix in this assignment)
+				glDrawElements(GL_TRIANGLES, Globals::secret_kiwi.mesh.faces.size() * 3, GL_UNSIGNED_INT, 0);
+			}
 		}
+		
 
 		// Finalize
 		glfwSwapBuffers(window);
@@ -727,15 +711,17 @@ void init_buffers(GLmodel& model)
 
 void init_scene(){
 	init_buffers(Globals::church);
-	init_buffers(Globals::secret_kiwi);
-
 	Globals::church.model_mats.push_back(Mat4x4());
 
-	Globals::secret_kiwi.model_count = 5;
-	for (int i = 0; i < Globals::secret_kiwi.model_count; i++)
+	if (Globals::kiwi_available)
 	{
-		Globals::secret_kiwi.model_mats.push_back(Mat4x4());
-		Globals::secret_kiwi.rotations.push_back(Vec3f(0.f, 0.f, PI));
+		init_buffers(Globals::secret_kiwi);
+		Globals::secret_kiwi.model_count = 5;
+		for (int i = 0; i < Globals::secret_kiwi.model_count; i++)
+		{
+			Globals::secret_kiwi.model_mats.push_back(Mat4x4());
+			Globals::secret_kiwi.rotations.push_back(Vec3f(0.f, 0.f, PI));
+		}
 	}
 }
 
