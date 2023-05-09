@@ -98,7 +98,7 @@ public:
 		);
 	}
 
-	Cam3d(Vec3f& eye_, Vec3f& dir_, Vec3f& up_,
+	Cam3d(Vec3f eye_, Vec3f dir_, Vec3f up_,
 			float near, float far, 
 			float left, float right, float top, float bottom,
 			float s_speed, float a_speed, float g_speed) 
@@ -110,7 +110,7 @@ public:
 		);
 	}
 
-	void init_params(Vec3f& eye_, Vec3f& dir_, Vec3f& up_,
+	void init_params(Vec3f eye_, Vec3f dir_, Vec3f up_,
 		float near, float far,
 		float left, float right, float top, float bottom,
 		float s_speed, float a_speed, float g_speed)

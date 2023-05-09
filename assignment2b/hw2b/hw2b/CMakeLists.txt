@@ -65,7 +65,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 # For Visual Studio only
 if (MSVC)
     # Do a parallel compilation of this project
-    target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
+    target_compile_options(${PROJECT_NAME} PRIVATE /MP /permissive-)
     # Have this project be the default startup project (the one to build/run when hitting F5)
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 endif()

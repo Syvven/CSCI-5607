@@ -1,6 +1,6 @@
 # ninja log v5
 17	1289	7036987216001740	ext/glfw/src/CMakeFiles/glfw.dir/monitor.c.obj	d75878988a22ded0
-3	1307	7036987216191747	CMakeFiles/HW2b.dir/ext/glad/src/glad.c.obj	1dee10837a82be02
+11	478	7053506552572441	CMakeFiles/HW2b.dir/ext/glad/src/glad.c.obj	e5cc222fc3fdf933
 13	1291	7036987216051752	ext/glfw/src/CMakeFiles/glfw.dir/init.c.obj	65624e04bf110aa7
 7	1295	7036987216081746	ext/glfw/src/CMakeFiles/glfw.dir/input.c.obj	9fcf417a8d6a3eb5
 24	1292	7036987216061741	ext/glfw/src/CMakeFiles/glfw.dir/vulkan.c.obj	7ca78e9d33f67a72
@@ -8,7 +8,7 @@
 28	1304	7036987216161748	ext/glfw/src/CMakeFiles/glfw.dir/win32_init.c.obj	d5834dfb167b01c1
 20	1305	7036987216176754	ext/glfw/src/CMakeFiles/glfw.dir/window.c.obj	9dda848650817d45
 10	1306	7036987216161748	ext/glfw/src/CMakeFiles/glfw.dir/context.c.obj	db62faebe9d05d3b
-3	752	7037114379512676	CMakeFiles/HW2b.dir/src/main.cpp.obj	24a1c4caa29e40e7
+4	1099	7053506627961870	CMakeFiles/HW2b.dir/src/main.cpp.obj	d5921e5175d51a7b
 31	1308	7036987216211749	ext/glfw/src/CMakeFiles/glfw.dir/win32_joystick.c.obj	bc7338645c8ea131
 12	466	7036987719318129	ext/glfw/src/CMakeFiles/glfw.dir/win32_thread.c.obj	6568c5110ae1aca0
 9	472	7036987719368139	ext/glfw/src/CMakeFiles/glfw.dir/win32_time.c.obj	d422a44073f4cbae
@@ -17,22 +17,7 @@
 22	513	7036987719893122	ext/glfw/src/CMakeFiles/glfw.dir/egl_context.c.obj	f84a7a38e300b0b6
 15	524	7036987720038107	ext/glfw/src/CMakeFiles/glfw.dir/win32_window.c.obj	9c724f5b3dd6ca62
 524	936	7036987722558124	ext/glfw/src/glfw3.lib	2965666c98c05074
-753	1402	7037114382687973	HW2b.exe	f8debbd8718d41c6
-3	625	7037115733322807	CMakeFiles/HW2b.dir/src/main.cpp.obj	24a1c4caa29e40e7
-625	1182	7037115737337804	HW2b.exe	f8debbd8718d41c6
-3	733	7037119224346724	CMakeFiles/HW2b.dir/src/main.cpp.obj	24a1c4caa29e40e7
-734	1199	7037119226996730	HW2b.exe	f8debbd8718d41c6
-3	634	7037120659349877	CMakeFiles/HW2b.dir/src/main.cpp.obj	24a1c4caa29e40e7
-634	1172	7037120663323163	HW2b.exe	f8debbd8718d41c6
-4	662	7037121126631091	CMakeFiles/HW2b.dir/src/main.cpp.obj	24a1c4caa29e40e7
-663	1175	7037121129346082	HW2b.exe	f8debbd8718d41c6
-2	768	7037123229097602	CMakeFiles/HW2b.dir/src/main.cpp.obj	24a1c4caa29e40e7
-769	1295	7037123233197592	HW2b.exe	f8debbd8718d41c6
-3	728	7037123532300531	CMakeFiles/HW2b.dir/src/main.cpp.obj	24a1c4caa29e40e7
-728	1015	7037123534160527	HW2b.exe	f8debbd8718d41c6
-3	628	7037124027359654	CMakeFiles/HW2b.dir/src/main.cpp.obj	24a1c4caa29e40e7
-628	976	7037124030064664	HW2b.exe	f8debbd8718d41c6
-3	613	7037124372603126	CMakeFiles/HW2b.dir/src/main.cpp.obj	24a1c4caa29e40e7
-613	958	7037124374693131	HW2b.exe	f8debbd8718d41c6
-2	736	7037124781386725	CMakeFiles/HW2b.dir/src/main.cpp.obj	24a1c4caa29e40e7
-737	1197	7037124784172029	HW2b.exe	f8debbd8718d41c6
+1099	1432	7053506630161845	HW2b.exe	f8debbd8718d41c6
+10	456	7053506960587542	CMakeFiles/HW2b.dir/ext/glad/src/glad.c.obj	d0792a66cbd6d629
+5	1361	7053507053100690	CMakeFiles/HW2b.dir/src/main.cpp.obj	9b6d287b90542f8f
+1362	1941	7053507057700680	HW2b.exe	f8debbd8718d41c6
